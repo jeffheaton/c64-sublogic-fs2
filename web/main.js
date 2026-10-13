@@ -583,6 +583,11 @@ async function findDisk() {
 }
 
 async function main() {
+  // The service worker (and so the isolation) needs a secure context: plain HTTP goes to HTTPS.
+  if (location.protocol === "http:" && !["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) {
+    location.replace(`https://${location.host}${location.pathname}${location.search}${location.hash}`);
+    return;
+  }
   // For the console: the engine's state (worker, controls, audio ring).
   Object.defineProperty(window, "fs2", { value: engine });
   wireControls();
