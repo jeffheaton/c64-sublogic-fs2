@@ -1,0 +1,26 @@
+# Reality mode and reliability failures, set in the editor: REALITY MODE (page 0, line 5) = 1 and
+# RELIABILITY FACTOR (page 1, line 19) = 0. $EA84 (main-loop phase 3) then runs the failure
+# trigger $EB1B on every 10th call when ((N + E) position byte) < 100 and >= $09A4: it blanks the
+# window with 'AIRCRAFT PROBLEM !!!!' and runs one of the 8 failure handlers ($EA5C table), which
+# clear instrument enable bits ($0942-$0944) or set engine/fuel bits ($09BF). Reality mode also
+# drifts the DG ($08C0 += 2) and the altimeter ($09CE/$09CF), pulls the elevator toward the trim
+# every 2 s ($EAE2), and needs the magnetos: the editor exit leaves the engine stopped.
+# The aircraft stays parked at Meigs: its position bytes ($5B + $63) sum to 0, which is below 100
+# and not below the reliability 0, so every 10th check fails something.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+peek:0967 peek:09A4 peek:0942:3 peek:09BF
+cov:on
+key:E:6 pc:2250:1500 wait:10 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:1:6 wait:24 key:RETURN:6 wait:24
+key:-:6 wait:24 key:-:6 wait:24 key:-:6 wait:24 key:-:6 wait:24 key:-:6 wait:24 key:-:6 wait:24 key:-:6 wait:24 key:-:6 wait:24 key:0:6 wait:24 text
+key:E:6 pc:204B:3000 pc:204B:3000 wait:120 peek:0967 peek:09A4 peek:0AB6 peek:09C9 peek:09BE shot:failures-1-start
+# Start the engine: RETURN, 5 = START; the switch reverts to BOTH once it runs.
+key:RETURN:6 wait:20 key:5:6 wait:120 peek:0AB6 peek:09C9 peek:09BE wait:120 peek:0AB6 peek:09C9 peek:09BE
+pc:EB1B:4000 wait:40 peek:0942:3 peek:09BF peek:08C0:2 peek:09CE:4 peek:0967 shot:failures-2
+pc:EB1B:4000 wait:40 peek:0942:3 peek:09BF peek:08C0:2 peek:09CE:4 peek:0967 shot:failures-3
+pc:EB1B:4000 wait:40 peek:0942:3 peek:09BF peek:08C0:2 peek:09CE:4 peek:0967 shot:failures-4
+pc:EB1B:4000 wait:40 peek:0942:3 peek:09BF peek:08C0:2 peek:09CE:4 peek:0967 shot:failures-5
+cov:save:failures

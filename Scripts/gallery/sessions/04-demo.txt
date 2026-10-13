@@ -1,0 +1,4 @@
+# Gallery: demo mode (A at the mode prompt): mode 2, the self-flying take-off from Meigs, a
+# minute into its climb.
+#: 06-demo-climb: Demo mode a minute after the prompts: the self-flying take-off from Meigs climbing away.
+key:A:12 wait:60 key:A:12 wait:3600 shot:06-demo-climb

@@ -1,0 +1,12 @@
+# Coverage baselines: 'boot' records the boot, the title and mode prompts and the first regular
+# flight passes until the Chicago area and the Meigs detail block are loaded; 'idle' records one
+# minute (3600 frames) of sitting on the runway at Meigs with no input. Feature coverage in
+# re/docs/coverage.md is reported relative to these two maps.
+cov:on
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:save:boot cov:off
+cov:on wait:3600 shot:idle-meigs cov:save:idle

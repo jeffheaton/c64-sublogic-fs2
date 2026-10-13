@@ -1,0 +1,7 @@
+# Replay (ReplayTests.sceneryAreaCrossing): slewing south (B) across the boundary of the root
+# list's Chicago box into the Champaign box: the six Champaign blocks stream into slot 0 (the
+# load holds the IRQ off; the lab delivers the frames it missed at the next poll). The prefix
+# (in the test): the Meigs prefix, then slew mode and the eye at north $0235:4000, settled.
+cov:on
+key:B:6 wait:20 key:B:6 wait:20 key:B:6 wait:1500
+cov:save:replay-crossing

@@ -1,0 +1,17 @@
+# Gallery: the course plotter (Q): the menu, a normal recording through a take-off, a climb and a
+# gentle right turn, then the plot displayed (B): the recorded track is drawn as a white polyline,
+# seen from the rear-right view and in the radar view zoomed out (four ',' presses). The turn stays
+# gentle: the steep spiral of re/sessions/plotter.txt ends in a crash on one engine and not on the
+# other when the two run on their own clocks.
+#: 28-plotter-menu: The COURSE PLOTTER SYSTEM menu (Q).
+#: 29-plotter-display: The recorded course displayed (Q, B), seen in the rear-right view (5 N).
+#: 30-plotter-radar: The recorded course in the radar view, zoomed out.
+key:A:12 wait:60 key:B:12 wait:900
+key:Q:6 wait:200 shot:28-plotter-menu
+key:A:6 wait:30 key:E:6 wait:120
+key:;:150 wait:550 key:B:6 wait:20 key:B:6 wait:20 key:B:6 wait:900
+key:H:6 wait:600 key:G:6 wait:600
+key:Q:6 wait:200 key:B:6 wait:30 key:E:6 wait:200
+key:5:6 wait:20 key:N:6 wait:200 shot:29-plotter-display
+key:5:6 wait:20 key:T:6 wait:20
+key:4:6 wait:200 key:,:6 wait:30 key:,:6 wait:30 key:,:6 wait:30 key:,:6 wait:200 shot:30-plotter-radar

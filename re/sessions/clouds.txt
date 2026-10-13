@@ -1,0 +1,40 @@
+# Clouds and wind, set in the editor, with an airborne start below the layer that climbs through it.
+# Page 0: ALTITUDE 1500 ft, AIRSPEED 100, THROTTLE 60000, ELEVATORS 38000 (nose up).
+# Page 1: CLOUD LAYER 1 tops 2100 / bottoms 1700 ft; WIND LEVEL 1 30 knots from 300 degrees below
+# SHEAR ZONE ALTITUDE 1 3000 ft; SURFACE WIND 520 (turbulence 5, 20 knots) from 270 degrees.
+# Peeks: cloud and shear bounds $098A-$0993, wind records $0994-$09A3, drift $09D3-$09D6,
+# fill selectors $0880-$0882, altitude $5E-$61 (1/256 m above the field datum).
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+key:E:6 pc:2250:1500 wait:10 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:1:6 wait:24 key:5:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:1:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24
+key:6:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:3:6 wait:24 key:8:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:2:6 wait:24 key:1:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24
+key:1:6 wait:24 key:7:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:3:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24
+key:3:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24
+key:3:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24
+key:5:6 wait:24 key:2:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24
+key:2:6 wait:24 key:7:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24 text
+key:E:6 pc:204B:3000 pc:204B:3000 wait:60
+peek:098A:1A peek:09D3:4 peek:0880:3 peek:5E:4 shot:clouds-1-below
+wait:300 peek:5E:4 peek:0880:3 shot:clouds-2
+wait:300 peek:5E:4 peek:0880:3 shot:clouds-3
+wait:300 peek:5E:4 peek:0880:3 shot:clouds-4
+wait:300 peek:5E:4 peek:0880:3 shot:clouds-5
+wait:300 peek:5E:4 peek:0880:3 shot:clouds-6
+wait:300 peek:5E:4 peek:0880:3 shot:clouds-7
+wait:300 peek:5E:4 peek:0880:3 shot:clouds-8
+wait:300 peek:5E:4 peek:0880:3 shot:clouds-9
+wait:300 peek:5E:4 peek:0880:3 shot:clouds-10
+wait:300 peek:5E:4 peek:0880:3 shot:clouds-11
+wait:300 peek:5E:4 peek:0880:3 shot:clouds-12
+wait:300 peek:5E:4 peek:0880:3 shot:clouds-13
+peek:09D3:4
+cov:save:clouds

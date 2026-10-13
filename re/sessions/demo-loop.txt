@@ -1,0 +1,22 @@
+# Demo mode loop. Mode prompt A sets $095B; the main loop's 1-in-8 demo check ($2133) turns it
+# into a mode request ($08BB = 3), and the editor overlay loads built-in mode 2 (a self-flying
+# takeoff from Meigs: throttle 32000, elevators 38911, ailerons 32700, 10:17) and exits with
+# $095A = 1 (demo active). The aircraft climbs away in a slow right turn and, about 28 minutes
+# later (~100,000 frames), comes down and crashes; the crash reloads the current mode (2), so the
+# demo repeats. Any key clears $095A ($27DD) and the flight continues under keyboard control.
+# Coverage starts before the prompts so the display/mode choice is recorded too.
+cov:on
+# Prefix: demo.txt (boot, color display, DEMO mode) without its final wait.
+pc:2250:9000 key:A:12
+pc:2250:600 key:A:12
+pc:204B:3000
+until:095A:01:3000 peek:095A peek:095B peek:0963 peek:0983:2 until:0901:4E:3000 pc:204B:3000 wait:120
+peek:0AC9 peek:0AAB:2 peek:0AA3:2 shot:demo-1-start
+wait:600 peek:5E:4 peek:0A4C:2 shot:demo-2-airborne
+wait:6000 peek:5E:4 peek:0A13:2 peek:09E0:2 shot:demo-3-climbing
+until:0834:!00:110000 peek:0834 peek:5A:C peek:0983:2 wait:80 shot:demo-4-crash
+until:A7E0:6B:1200 until:0901:4E:3000 pc:204B:3000 wait:120 peek:095A peek:0963 peek:0983:2 peek:5E:4 shot:demo-5-again
+# Any key ends the demo: here the 5 key, which only arms the view prefix; $095A is cleared.
+key:5:6 wait:30 peek:095A peek:00FC
+wait:600 peek:5E:4 peek:0834 shot:demo-6-after-key
+cov:save:demo-loop

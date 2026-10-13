@@ -1,0 +1,6 @@
+# Replay (ReplayTests.demoMode): demo mode from the first top of the main loop after the prompts
+# (prefix: color display, A. DEMO MODE). The 1-in-8 demo check sets $08BB = 3; the editor
+# overlay loads mode 2 (the self-flying takeoff from Meigs) and the demo flies.
+cov:on
+wait:3000
+cov:save:replay-demo

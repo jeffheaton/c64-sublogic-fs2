@@ -1,0 +1,9 @@
+# Gallery: a crash. Take off, climb, then push the nose down (T) into the ground: the crash code,
+# 'CRASH !!!' in the window during its delay, then the mode reload.
+#: 34-dive: The dive toward the ground.
+#: 35-crash-message: The crash message.
+key:A:12 wait:60 key:B:12 wait:900
+key:;:150 wait:480 key:B:6 wait:20 key:B:6 wait:20 key:B:6 wait:900
+key:T:6 wait:20 key:T:6 wait:20 key:T:6 wait:20 key:T:6 wait:20 key:T:6 wait:20 key:T:6 wait:20
+wait:200 shot:34-dive
+wait:150 shot:35-crash-message

@@ -1,0 +1,18 @@
+# Replay (ReplayTests.viewsAndRadar): the view prefix '5' and the nine views (T Y H N B V F R G),
+# B moving the elevator again, then the radar view '4' with its zoom (',' '.') and '5' back.
+cov:on
+key:5:6 wait:20 key:Y:6 wait:120
+key:5:6 wait:20 key:H:6 wait:120
+key:5:6 wait:20 key:N:6 wait:120
+key:5:6 wait:20 key:B:6 wait:120
+key:5:6 wait:20 key:V:6 wait:120
+key:5:6 wait:20 key:F:6 wait:120
+key:5:6 wait:20 key:R:6 wait:120
+key:5:6 wait:20 key:G:6 wait:120
+key:5:6 wait:20 key:T:6 wait:120
+key:B:6 wait:30
+key:4:6 wait:150
+key:,:6 wait:40 key:,:6 wait:150
+key:.:6 wait:40 key:.:6 wait:40 key:.:6 wait:150
+key:5:6 wait:150
+cov:save:replay-views

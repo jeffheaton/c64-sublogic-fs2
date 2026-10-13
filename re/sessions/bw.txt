@@ -1,0 +1,21 @@
+# Black-and-white display and the time-of-day palettes. B at the display prompt selects the B&W
+# palette sources ($0E61 = $FC, $0E63/$0E65 = $CB, $0E69 = 0; color A gives $65/$6C/$EA/$0B).
+# The editor's TIME: HOURS (page 1, line 1) then moves the clock through dawn and dusk; $EBF2
+# picks the palette from the thresholds at $EBD2 ($083C = 1 day, 2 dusk/dawn, 4 night).
+# Coverage starts before the prompts so the display/mode choice is recorded too.
+cov:on
+# Prefix: regular.txt with B (black and white) at the display prompt, then wait for the scenery.
+pc:2250:9000 key:B:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+peek:0E61:9 peek:083C shot:bw-1-day
+key:E:6 pc:2250:1500 wait:10 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:1:6 wait:24 key:9:6 wait:24 key:E:6 pc:204B:3000 pc:204B:3000 wait:300
+peek:0983 peek:083C peek:0880:3 shot:bw-2-hour19
+key:E:6 pc:2250:1500 wait:10 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:2:6 wait:24 key:0:6 wait:24 key:E:6 pc:204B:3000 pc:204B:3000 wait:300
+peek:0983 peek:083C peek:0880:3 shot:bw-3-hour20
+key:E:6 pc:2250:1500 wait:10 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:6:6 wait:24 key:E:6 pc:204B:3000 pc:204B:3000 wait:300
+peek:0983 peek:083C peek:0880:3 shot:bw-4-hour6
+key:E:6 pc:2250:1500 wait:10 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:5:6 wait:24 key:E:6 pc:204B:3000 pc:204B:3000 wait:300
+peek:0983 peek:083C peek:0880:3 shot:bw-5-hour5
+cov:save:bw

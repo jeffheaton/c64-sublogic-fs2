@@ -1,0 +1,8 @@
+# Replay (ReplayModesTests.realityFailures): reality mode with reliability 0 (the prefix, in the
+# test, pokes `$0967` = 1, `$09A4` = 0 and the failure countdown `$08CD` = 0). Phase 3's $EA84
+# (with the carry the oil-pressure gauge leaves) then triggers a failure at once and again 11
+# phase-3 passes later: 'AIRCRAFT PROBLEM !!!!' in the window and one of the eight handlers; the
+# DG and altimeter drift, and the tick's trim creep every two TOD seconds.
+cov:on
+wait:4200
+cov:save:replay-failures

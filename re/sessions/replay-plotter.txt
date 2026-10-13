@@ -1,0 +1,16 @@
+# Replay (ReplayTests.coursePlotter): Q asks for the course plotter menu ($0E70); the next flip
+# pass's alternate-pass tasks run $F627 (the menu in the window, key waits). A starts a normal
+# recording (the display list at $D000, RAM under I/O), E returns to flight; the take-off and
+# climb record the course; Q, B shows the plot (the display mode `$0E82`, run each pass by
+# $F6E2); Q, D turns it off.
+# The keys are held 14 frames (the lab takes interrupts only at the poll points while recording).
+cov:on
+key:Q:14 pc:2250:3000 wait:30
+key:A:14 wait:30 key:E:14 wait:120
+key:;:150 wait:540
+key:B:14 wait:30 key:B:14 wait:30 key:B:14 wait:900
+key:Q:14 pc:2250:3000 wait:30
+key:B:14 wait:30 key:E:14 wait:600
+key:Q:14 pc:2250:3000 wait:30
+key:D:14 wait:30 key:E:14 wait:300
+cov:save:replay-plotter

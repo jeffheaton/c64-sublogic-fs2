@@ -1,0 +1,22 @@
+# Replay (ReplayTests.radiosAndAtis): COM 124.85 tuned to 121.30, the Meigs ATIS (the op 1E
+# record matches, the composer fills the phrases, the teletype types the broadcast with its
+# delays); then NAV1 and NAV2, the OBS, the transponder and the ADF digits.
+# While recording, the lab takes interrupts only at the poll points, so a key must be held
+# across a poll and a scan: the keys are held 14 frames with 30-frame gaps (no repeats yet).
+cov:on
+down:CTRL wait:8 key:C:14 up:CTRL wait:30
+key:,:14 wait:30 key:,:14 wait:30 key:,:14 wait:30
+down:CTRL wait:8 key:C:14 wait:8 key:C:14 up:CTRL wait:30
+key:.:14 wait:30 key:.:14 wait:30 key:.:14 wait:30 key:.:14 wait:30 key:.:14 wait:30
+key:.:14 wait:30 key:.:14 wait:30 key:.:14 wait:30 key:.:14 wait:30
+wait:1500
+down:CTRL wait:8 key:N:14 up:CTRL wait:30
+key:.:14 wait:30 key:.:14 wait:30
+key:2:14 wait:30 key:.:14 wait:30 key:.:14 wait:30
+key:1:14 wait:30
+down:CTRL wait:8 key:V:14 up:CTRL wait:30
+key:.:14 wait:30 key:.:14 wait:30 key:.:14 wait:30
+down:CTRL wait:8 key:X:14 up:CTRL wait:30 key:.:14 wait:30
+key:A:14 wait:30 key:.:14 wait:30
+wait:300
+cov:save:replay-radios

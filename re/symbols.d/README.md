@@ -1,0 +1,3 @@
+# symbols.d
+
+Optional fragments of `re/symbols.json`. `SymbolDatabase.load` (used by `fs2lab symbols-check` and `fs2lab listing`) merges every `*.json` here into the main database, so parallel work units can add names without editing the same file. A fragment entry replaces the entry of its kind with the same address and overlay; anything else is added, and notes are appended. Because of that, an alias (a second name for an address that already has a variable) must go into `symbols.json` itself. Fold fragments into `symbols.json` when the work lands; the directory is normally empty. See `re/README.md`.

@@ -1,0 +1,12 @@
+# Replay (ReplayTests.secondCrash): a second crash. The prefix (in the test) flies the first
+# crash of replay-crash.txt in the lab, so the editor overlay is cached ($08BC = 1); this crash's
+# mode reload then takes the editor from the cache and the main loop swaps it back out
+# (the call to $E6DB after the slot $A7E8, the cache bookkeeping's second branch).
+cov:on
+key:;:150 wait:480 key:B:14 wait:30 key:B:14 wait:30 key:B:14 wait:900
+key:T:14 wait:30 key:T:14 wait:30 key:T:14 wait:30 key:T:14 wait:30 key:T:14 wait:30 key:T:14 wait:30
+until:0834:!00:3000
+until:A7E0:6B:1200
+until:0901:00:3000
+until:0901:4E:3000 pc:204B:3000 wait:300
+cov:save:replay-recrash

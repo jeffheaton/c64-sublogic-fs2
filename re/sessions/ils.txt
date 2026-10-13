@@ -1,0 +1,36 @@
+# ILS approach at Champaign (runway 32L, localizer 109.10) through the two marker beacons.
+# The Champaign area data (block 52) holds the localizer record (op 1D, 109.10) and two op 21
+# position boxes that store 1 into the outer marker flag $084C (east 109-115, north -18..-12 in
+# high-word units) and the middle marker flag $084E (east 85-87, north 9-11); $3EFC consumes the
+# flags (shifting each one out), lights the O/M lamp cells ($7E7B/$7E7C) and starts sound states
+# 5/6 ($0E59; 400 Hz / 1300 Hz patterns).
+# The editor places the aircraft on the extended centerline south-east of the outer marker
+# (NORTH 16363, EAST 16502) at 2300 ft, heading 314, 85 knots, throttle 15000, elevators 37000
+# (a slow descent); NAV1 is tuned to 109.10 (CTRL+N, ','; CTRL+N CTRL+N, '.' '.') and OBS1 to 314
+# (CTRL+V, ',' x23).
+# Peeks: position $5A-$65, vertical speed $0A50, sound state $0E59, NAV found bits $0922,
+# marker lamp cells $7E7B-$7E7D.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+key:E:6 pc:2250:1500 wait:10 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:1:6 wait:24 key:6:6 wait:24 key:3:6 wait:24 key:6:6 wait:24 key:3:6 wait:24 key:RETURN:6 wait:24
+key:1:6 wait:24 key:6:6 wait:24 key:5:6 wait:24 key:0:6 wait:24 key:2:6 wait:24 key:RETURN:6 wait:24
+key:2:6 wait:24 key:3:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:3:6 wait:24 key:1:6 wait:24 key:4:6 wait:24 key:RETURN:6 wait:24
+key:8:6 wait:24 key:5:6 wait:24 key:RETURN:6 wait:24
+key:1:6 wait:24 key:5:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:3:6 wait:24 key:7:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 text
+key:E:6 pc:204B:3000 pc:204B:3000 until:0900:34:3000 pc:204B:3000 wait:60 peek:0900:4 peek:5A:C
+down:CTRL wait:8 key:N:6 up:CTRL wait:20 key:,:6 wait:24
+down:CTRL wait:8 key:N:6 wait:6 key:N:6 up:CTRL wait:12 key:.:6 wait:24 key:.:6 wait:24 peek:21B7:4
+down:CTRL wait:8 key:V:6 up:CTRL wait:20 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 key:,:6 wait:24 peek:2196
+wait:60 peek:5A:C peek:0A50:2 peek:0922 shot:ils-1-localizer
+until:0E59:05:12000 peek:5A:C peek:0A50:2 wait:30 peek:7E7B:3 shot:ils-2-outer-marker
+wait:600 peek:7E7B:3 peek:0E59 shot:ils-3
+until:0E59:06:30000 peek:5A:C peek:0A50:2 wait:30 peek:7E7B:3 shot:ils-4-middle-marker
+wait:600 peek:5A:C peek:0A50:2 shot:ils-5
+cov:save:ils

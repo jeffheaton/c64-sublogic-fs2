@@ -1,0 +1,10 @@
+# Replay (ReplayTests.takeoffAndClimb): full throttle with ';' (held: auto-repeat), rotation with
+# B, the climb, trim V/R, the '/' throttle jump to idle and back, a turn with H and G.
+cov:on
+key:;:150 wait:540
+key:B:6 wait:20 key:B:6 wait:20 key:B:6 wait:440
+key:V:6 wait:20 key:V:6 wait:20 key:R:6 wait:620
+key:/:6 wait:20 key:COLON:6 wait:30
+key:/:6 wait:20 key:;:6 wait:30
+key:H:6 wait:20 key:H:6 wait:60 key:G:6 wait:320
+cov:save:replay-takeoff

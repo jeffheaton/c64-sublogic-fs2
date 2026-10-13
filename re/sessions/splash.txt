@@ -1,0 +1,27 @@
+# Splash: two ways into Lake Michigan east of Meigs.
+# 1. Taxi: right rudder (M) with some throttle turns the aircraft east on the ground and it rolls
+#    off Northerly Island into the water.
+# 2. Glide: the editor places the aircraft 1 km east of Meigs over the lake (EAST 16675) at
+#    1100 ft, heading 90, 80 knots, throttle 10000, elevators 37000; it settles onto the water.
+# Splash detection ($F996, even phases) needs the aircraft on the ground, the front view, no
+# radar, $0A83 = 0, and the window byte $50DE (y 110, x 152-159) equal to the water pattern $55
+# for 3 consecutive checks; it sets $0834 = 8, and $F95D shows 'SPLASH !!!' and reloads the mode.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+key:;:40 wait:20 key:M:6 wait:14 key:M:6 wait:14 key:M:6 wait:14 key:M:6 wait:14 key:M:6 wait:14 key:M:6 wait:14 peek:0ABD peek:0AC9
+wait:900 peek:0A13:2 peek:5A:C peek:0A4C:2 shot:splash-1-taxi
+until:0834:!00:3000 peek:0834 peek:0A13:2 peek:5A:C peek:50DE wait:80 shot:splash-2-message
+until:A7E0:6B:1200 until:0901:4E:3000 pc:204B:3000 wait:120 peek:0834 peek:5A:C peek:0983
+key:E:6 pc:2250:1500 wait:10 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:1:6 wait:24 key:6:6 wait:24 key:6:6 wait:24 key:7:6 wait:24 key:5:6 wait:24 key:RETURN:6 wait:24
+key:1:6 wait:24 key:1:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:9:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24
+key:8:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24
+key:1:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:3:6 wait:24 key:7:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 key:0:6 wait:24 text key:E:6 pc:204B:3000 pc:204B:3000 wait:200 peek:5A:C peek:0A50:2 shot:splash-3-over-lake
+until:0A12:FF:6000 peek:5E:4 peek:0A50:2 peek:0A12 wait:30 shot:splash-4-touchdown
+until:0834:!00:3000 peek:0834 peek:50DE wait:80 shot:splash-5-message
+cov:save:splash

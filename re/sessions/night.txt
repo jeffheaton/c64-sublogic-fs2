@@ -1,0 +1,25 @@
+# Night flight: the editor's TIME: HOURS (page 1, line 1) set to 22. The time-of-day routine $EBF2
+# switches the window palette; the lights switch (L) then also gates the instrument masks
+# ($EBA5 writes $0945-$0947).
+# Peeks: hours $0983, palette/day state $083C, sky/ground fill selectors $0880/$0882,
+# lights $0AB5, enable masks $0945-$0947 and $FD-$FF, background $D021 shadow $0E61-$0E66.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+peek:0983 peek:083C peek:0880:3 peek:0945:3 peek:00FD:3 peek:0E61:6
+cov:on
+key:E:6 pc:2250:1500 wait:10 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:2:6 wait:24 key:2:6 wait:24 text key:E:6 pc:204B:3000 pc:204B:3000 wait:300
+peek:0983 peek:083C peek:0880:3 peek:0945:3 peek:00FD:3 peek:0E61:6 shot:night-1-front
+key:5:6 wait:20 key:F:6 wait:200 shot:night-2-left-city
+key:5:6 wait:20 key:T:6 wait:60
+key:L:6 wait:200 peek:0AB5 peek:0945:3 peek:00FD:3 shot:night-3-lights-off
+key:L:6 wait:200 peek:0AB5 peek:0945:3 peek:00FD:3 shot:night-4-lights-on
+key:4:6 wait:200 shot:night-5-radar
+key:5:6 wait:60
+# Take off into the night (see takeoff.txt) and look back at the city.
+key:;:150 wait:550 key:B:6 wait:20 key:B:6 wait:20 key:B:6 wait:900 shot:night-6-climb
+key:5:6 wait:20 key:V:6 wait:200 shot:night-7-rear-left
+cov:save:night

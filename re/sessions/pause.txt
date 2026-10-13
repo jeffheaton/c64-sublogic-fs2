@@ -1,0 +1,21 @@
+# Pause: P (and RUN/STOP, code $50) jumps to the wait-for-key routine $2250, which sets $08CC
+# (suspends the 5 Hz work and the 1 Hz sound/clock tick) until any key; that key is consumed.
+# Evidence: the clock seconds $091A and the airspeed $0A4C:$0A4D stay frozen during the pause
+# while the throttle is open.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+key:;:120 wait:120 peek:091A peek:0A4C:2
+key:P:6 wait:30 peek:08CC peek:091A peek:0A4C:2 shot:pause-1
+wait:600 peek:08CC peek:091A peek:0A4C:2 shot:pause-2-after-10s
+# Any key ends the pause and is swallowed (B would otherwise move the elevator).
+key:B:6 wait:60 peek:08CC peek:091A peek:0A4C:2 peek:0AAB:2 shot:pause-3-resumed
+wait:300 peek:091A peek:0A4C:2
+# RUN/STOP pauses the same way (matrix code $50 = 'P').
+key:RUNSTOP:6 wait:30 peek:08CC peek:091A
+wait:300 peek:08CC peek:091A
+key:SPACE:6 wait:60 peek:08CC peek:091A
+cov:save:pause

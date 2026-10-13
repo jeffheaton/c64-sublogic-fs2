@@ -1,0 +1,35 @@
+# Slew mode, switched on in the editor (page 0, line 4 SLEW = 1). The main loop then calls the slew
+# integrator $3660 instead of $32EE/$E716, and the flight keys change the slew rates:
+# T/B north rate (elevator $0AAB:$0AAC), F/H east rate (ailerons $0AA3:$0AA4), ';'/':' altitude
+# rate $0AC5, 8/9 pitch rate $0AC3, R bank rate $0ABF, V heading rate $0AC1, G zeroes the rates,
+# Z zeroes the attitude ($6C-$71). The window shows the NORTH/EAST readouts ($EB82).
+# Peeks: slew flag $0966, position north $62-$65 / east $5A-$5D / altitude $5E-$61.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+key:E:6 pc:2250:1500 wait:10 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:1:6 wait:24 text key:E:6 pc:204B:3000 pc:204B:3000 wait:120 peek:0966 peek:5A:C shot:slew-1-on
+# Climb: ';' raises the altitude rate.
+key:;:6 wait:20 key:;:6 wait:20 key:;:6 wait:20 key:;:6 wait:600 peek:0AC5 peek:5A:C shot:slew-2-climb
+key:G:6 wait:60 peek:0AC5 peek:0AAB:2
+# North: B (elevator up) / T (down); east: H / F.
+key:T:6 wait:20 key:T:6 wait:20 key:T:6 wait:20 key:T:6 wait:20 key:T:6 wait:20 key:T:6 wait:600 peek:0AAB:2 peek:5A:C shot:slew-3-north
+key:G:6 wait:20 key:H:6 wait:20 key:H:6 wait:20 key:H:6 wait:20 key:H:6 wait:20 key:H:6 wait:20 key:H:6 wait:600 peek:0AA3:2 peek:5A:C shot:slew-4-east
+key:G:6 wait:60 peek:5A:C
+# Attitude rates: 9 pitch, R bank, V heading; then Z zeroes the attitude.
+key:9:6 wait:20 key:9:6 wait:20 key:R:6 wait:20 key:V:6 wait:300 peek:0AC3 peek:0ABF peek:0AC1 peek:6C:6 shot:slew-5-rotating
+key:G:6 wait:60 peek:6C:6 shot:slew-6-stopped
+key:Z:6 wait:120 peek:6C:6 shot:slew-7-zeroed
+# Negative rates: B (south), F (west), ':' (COLON, descend) and 8 (pitch down).
+key:B:6 wait:20 key:B:6 wait:20 key:F:6 wait:20 key:F:6 wait:20 key:COLON:6 wait:20 key:COLON:6 wait:20
+key:8:6 wait:20 wait:400 peek:0AAB:2 peek:0AA3:2 peek:0AC5 peek:0AC3 peek:5A:C shot:slew-8-negative
+key:G:6 wait:60
+# CTRL+T in slew copies the view attitude back into the flight angles ($09DE/$09E0/$0A13).
+key:9:6 wait:20 key:V:6 wait:200 key:G:6 wait:30 down:CTRL wait:8 key:T:6 up:CTRL wait:30 peek:6C:6 peek:09DE:4 peek:0A13:2
+# Back to normal flight through the editor.
+key:E:6 pc:2250:1500 wait:10 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:0:6 wait:24 key:E:6 pc:204B:3000 pc:204B:3000 wait:300 peek:0966 peek:5A:C shot:slew-9-off
+cov:save:slew

@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+# Runs a command with a hard wall-clock cap: capped SECONDS COMMAND [ARGS...]
+# The command runs in its own process group, and on timeout the whole group is killed (so
+# helpers such as swiftpm-testing-helper cannot outlive the cap). Exit status 142 means timeout.
+use strict;
+use warnings;
+my $seconds = shift or die "usage: capped SECONDS COMMAND [ARGS...]\n";
+my $pid = fork();
+die "fork failed: $!\n" unless defined $pid;
+if ($pid == 0) {
+    setpgrp(0, 0);
+    exec @ARGV or die "exec failed: $!\n";
+}
+$SIG{ALRM} = sub {
+    print STDERR "capped: '$ARGV[0]' exceeded ${seconds}s; killing its process group\n";
+    kill 'TERM', -$pid;
+    sleep 2;
+    kill 'KILL', -$pid;
+    exit 142;
+};
+# Ctrl-C, TERM or HUP to the wrapper stop the whole group too (it has its own process group).
+for my $sig (qw(INT TERM HUP)) {
+    $SIG{$sig} = sub { kill $sig, -$pid; sleep 1; kill 'KILL', -$pid; exit 130 };
+}
+alarm $seconds;
+waitpid($pid, 0);
+alarm 0;
+exit($? & 127 ? 128 + ($? & 127) : $? >> 8);

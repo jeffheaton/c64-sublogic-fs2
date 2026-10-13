@@ -1,0 +1,16 @@
+# Stall: after takeoff, full back elevator with the throttle closed. The aero update $2F45 raises
+# the stall warning when the AoA proxy $09DD >= $21 (stall horn sound state $0E59 = 1, warning
+# lamp cells $7E3D/$7E3E = $12) and stalls at >= $24 (lift cut, $0E7B = 15, $0E75 = 6).
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+key:;:150 wait:480 key:B:6 wait:20 key:B:6 wait:20 key:B:6 wait:900 peek:5E:4
+key:/:6 wait:20 key:COLON:6 wait:20 peek:0AC9
+key:B:6 wait:14 key:B:6 wait:14 key:B:6 wait:14 key:B:6 wait:14 key:B:6 wait:14 key:B:6 wait:14 peek:0AAB:2
+until:0E59:01:3000 peek:09DD peek:0A4C:2 peek:7E3D:2 wait:20 shot:stall-1-horn
+until:0E7B:!00:3000 peek:09DD peek:0E7B peek:0E75 peek:0A50:2 wait:60 shot:stall-2-stalled
+wait:300 peek:09DD peek:5E:4 peek:0A50:2 shot:stall-3
+cov:save:stall

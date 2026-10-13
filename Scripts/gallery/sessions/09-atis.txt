@@ -1,0 +1,17 @@
+# Gallery: the Meigs ATIS on the teletype. COM is tuned from 124.85 to 121.30 with CTRL-C (CTRL held
+# with down:/up:) and the , and . keys, as re/sessions/atis.txt does; the scenery's ATIS record
+# then matches and the teletype types the Meigs broadcast into the window.
+#: 31-atis-1: ATIS: the teletype starts typing the Meigs broadcast into the window.
+#: 32-atis-2: ATIS: the broadcast a little later.
+#: 33-atis-3: ATIS: further on.
+key:A:12 wait:60 key:B:12 wait:900
+# MHz: 124 -> 121.
+down:CTRL wait:8 key:C:6 up:CTRL wait:20
+key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:30
+# kHz: .85 -> .30 (nine steps up through .00).
+down:CTRL wait:8 key:C:6 wait:6 key:C:6 up:CTRL wait:12
+key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:20
+key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:20
+wait:60 shot:31-atis-1
+wait:200 shot:32-atis-2
+wait:300 shot:33-atis-3

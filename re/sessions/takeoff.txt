@@ -1,0 +1,30 @@
+# Takeoff from Meigs runway 36 and climb: full throttle with ';' (auto-repeat while held:
+# $0AC9 += 8 per repeat, up to $78), rotate with B (elevator $0AAB:$0AAC; +4, then +16 per press
+# inside the quick-repeat window), trim with V (+4, nose up) and R (-4), and the '/' prefix that
+# makes the next throttle key jump to idle or full.
+# Peeks: throttle $0AC9, airspeed $0A4C:$0A4D (8.8 m/s), altitude $5E-$61 ($5F:$60 = meters above
+# the field datum), on-ground flag $0A12, vertical speed $0A50:$0A51, trim $0AAE, RPM/50 $09BE.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+peek:0AC9 peek:09BE
+key:;:150 peek:0AC9 wait:60 peek:09BE shot:takeoff-1-roll
+wait:480 peek:0A4C:2 peek:0A12
+# Rotate at about 80 kt.
+key:B:6 wait:20 key:B:6 wait:20 key:B:6 wait:20 peek:0AAB:2
+wait:120 peek:0A4C:2 peek:5E:4 peek:0A12 shot:takeoff-2-liftoff
+wait:300 peek:0A4C:2 peek:5E:4 peek:0A50:2 shot:takeoff-3-climb
+# Trim: V twice (+8), R once (-4).
+key:V:6 wait:20 key:V:6 wait:20 peek:0AAE key:R:6 wait:20 peek:0AAE peek:0AAB:2
+wait:600 peek:0A4C:2 peek:5E:4 peek:0A50:2 shot:takeoff-4-climb
+# '/' then ':' (COLON) jumps the throttle to idle; '/' then ';' back to full.
+key:/:6 wait:20 key:COLON:6 wait:30 peek:0AC9 peek:08D5
+key:/:6 wait:20 key:;:6 wait:30 peek:0AC9
+# Turn: H rolls right, G centers the ailerons and rudder.
+key:H:6 wait:20 key:H:6 wait:60 peek:0AA3:2 peek:0ABD key:G:6 wait:20 peek:0AA3:2
+wait:300 peek:0A13:2 peek:09E0:2 shot:takeoff-5-turn
+wait:600 peek:0A13:2 peek:5E:4 shot:takeoff-6
+cov:save:takeoff

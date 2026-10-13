@@ -1,0 +1,9 @@
+# Gallery: night (the clock poked to 22:00; the phase-0 time of day switches the palette), the
+# city lights to the left, then a night take-off.
+#: 07-night-meigs: Night at Meigs (clock 22:00): the night palette and the lights.
+#: 08-night-city: Night, view left: the Chicago lights (dotted pens).
+#: 09-night-flight: Night flight: climbing out of Meigs after a night take-off.
+key:A:12 wait:60 key:B:12 wait:900 poke:0983:16 wait:600 shot:07-night-meigs
+key:5:6 wait:20 key:F:6 wait:200 shot:08-night-city
+key:5:6 wait:20 key:T:6 wait:60
+key:;:150 wait:550 key:B:6 wait:20 key:B:6 wait:20 key:B:6 wait:900 shot:09-night-flight

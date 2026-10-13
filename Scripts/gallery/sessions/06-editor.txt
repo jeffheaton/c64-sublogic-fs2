@@ -1,0 +1,12 @@
+# Gallery: the editor (E), page 0 and page 1 (21 RETURNs move the cursor line by line onto page
+# 1). Without an imported character ROM both engines draw the text with the fallback font.
+#: 21-editor-page-0: The editor, page 0 (fallback character set).
+#: 22-editor-page-1: The editor, page 1 (fallback character set).
+key:A:12 wait:60 key:B:12 wait:900
+key:E:6 wait:900 shot:21-editor-page-0
+key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:RETURN:6 wait:24
+wait:10 shot:22-editor-page-1

@@ -1,0 +1,10 @@
+# Boot to the title, choose color display (A) and regular flight (B), sit at Meigs.
+# $2250 is the wait-for-key routine; $204B is the top of the main loop.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+wait:300
+# Let the initial scenery stream in (the loader runs ~1.5 M cycles per block), then stop at the
+# top of the main loop so snapshots start from a quiet, deterministic point.
+wait:900
+pc:204B:3000

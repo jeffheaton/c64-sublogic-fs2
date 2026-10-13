@@ -1,0 +1,11 @@
+# Replay (ReplayModesTests.joysticks): the joysticks through the frame IRQ's scan (a joystick bit
+# low ends the scan and latches $0E6E / $0E6F) and the 5 Hz tick's $2688. Port 2 up and down: the
+# throttle; port 1 down and up: the elevator; port 1 right and left: the ailerons with the
+# auto-centering ($0E7A, $26EC); port 1 fire: the view prefix, then H: the right view, 5 T back.
+cov:on
+joy2:up:120 wait:30 joy2:down:30 wait:30
+joy1:down:24 wait:30 joy1:up:14 wait:30
+joy1:right:14 wait:90 joy1:left:14 wait:90
+joy1:fire:14 wait:30 key:H:14 wait:150
+key:5:14 wait:30 key:T:14 wait:150
+cov:save:replay-joystick

@@ -1,0 +1,6 @@
+# Gallery: the title with the display prompt, then the mode prompt (color display).
+# Played after --quick-boot (the boot loads run flat out to the title prompt).
+#: 01-title-display-prompt: The title screen. In FS II it carries the display prompt (A color, B black and white). The two rows the crack overwrote stay blank.
+#: 02-mode-prompt: The mode prompt after A (color display): A demo, B regular flight.
+wait:2 shot:01-title-display-prompt
+key:A:12 wait:60 shot:02-mode-prompt

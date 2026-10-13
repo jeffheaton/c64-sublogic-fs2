@@ -1,0 +1,16 @@
+# Any key ends demo mode: the key dispatcher $27D8 clears the demo flag $095A ($27DD) for every
+# key it takes. demo-loop.txt cannot show this: its crash reload copies the already-cleared $095B
+# into $095A, so its final key press finds the flag at 0. Here the key comes during the first
+# demo flight, while $095A is still 1.
+# Prefix: demo.txt (boot, color display, DEMO mode) without its final wait.
+pc:2250:9000 key:A:12
+pc:2250:600 key:A:12
+pc:204B:3000
+until:095A:01:3000 until:0901:4E:3000 pc:204B:3000 wait:120
+cov:on
+peek:095A peek:00FC
+# '5' only arms the view prefix ($FC = 1), so the flight itself is not disturbed.
+key:5:6 wait:30 peek:095A peek:00FC
+# The flag stays clear; the preset controls still fly the demo's takeoff.
+wait:300 peek:095A peek:5E:4 shot:demo-key-after
+cov:save:demo-key

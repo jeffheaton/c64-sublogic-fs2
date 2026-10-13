@@ -1,0 +1,16 @@
+# Radar (map) view and its zoom, on the runway at Meigs.
+# '4' sets $0836 = 1 and selects item $FC = 2; ',' and '.' then change the 24-bit map height
+# $0889-$088B; '5' leaves radar ($0836 = 0) without arming the view prefix.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+key:4:6 wait:150 peek:0836 peek:00FC peek:0888:4 shot:radar-1
+key:,:6 wait:40 key:,:6 wait:150 peek:0888:4 shot:radar-2-comma-x2
+key:,:6 wait:40 key:,:6 wait:150 peek:0888:4 shot:radar-3-comma-x4
+key:.:6 wait:40 key:.:6 wait:40 key:.:6 wait:40 key:.:6 wait:150 peek:0888:4 shot:radar-4-period-x4
+key:.:6 wait:40 key:.:6 wait:40 key:.:6 wait:150 peek:0888:4 shot:radar-5-period-x7
+key:5:6 wait:150 peek:0836 peek:00FC shot:radar-6-left
+cov:save:radar

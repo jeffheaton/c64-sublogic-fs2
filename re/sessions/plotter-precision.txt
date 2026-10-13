@@ -1,0 +1,21 @@
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+key:Q:6 pc:2250:600 wait:30 key:C:6 wait:30 key:E:6 wait:120
+key:;:150 wait:550 key:B:6 wait:20 key:B:6 wait:20 key:B:6 wait:900
+key:H:6 wait:600 key:G:6 wait:600 key:F:6 wait:600 key:G:6 wait:600
+key:Q:6 pc:2250:600 wait:30 key:B:6 wait:30 key:E:6 wait:1200
+key:4:6 wait:200 key:,:6 wait:30 key:,:6 wait:30 key:,:6 wait:30 key:,:6 wait:1200
+cov:save:plotter-precision
+# Course plotter, precision recording and a long display (ReplayMatrixTests). plotter.txt records
+# in normal mode for a short while; here C records a point every 2 passes through a take-off, a
+# climb and turns either way, so the list at $D000 grows long, and B displays it for a long stretch,
+# in the front view and in the radar view zoomed out (four ',' presses).
+# The display runs the list through the scenery interpreter with I/O banked out ($01 = $4B = $30,
+# $F7B0). In normal mode an IRQ taken inside the 10 Hz tick then leaves $01 = $30 for the rest of
+# the tick, which reads $DC09 from RAM: the clock runs two to three times too fast while the plot
+# is displayed (BankedOutTickTests). A recording takes its IRQs only at the poll points, outside the
+# tick, so this replay checks the long display itself, not that race.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.

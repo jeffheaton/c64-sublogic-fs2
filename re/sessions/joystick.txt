@@ -1,0 +1,27 @@
+# Joysticks. Port 1 is the yoke: up/down = T/B (elevator, without the quick-repeat acceleration),
+# left/right = F/H (ailerons) and $0E78 = 3 for the auto-centering ($26EC), fire = '5' (view
+# prefix). Port 2: up/down = throttle +/-, fire = guns. $2574 sees a joystick bit low, aborts the
+# keyboard scan and latches $0E6E (port 2) / $0E6F (port 1); the 5 Hz tick runs $2688 once per
+# latch. Keys pressed while a stick is deflected are lost.
+# Peeks: elevator $0AAB:$0AAC, ailerons $0AA3:$0AA4, rudder $0ABD, throttle $0AC9, $FC, $0E78.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+# Port 2 up: throttle up while held; down: throttle down.
+joy2:up:120 wait:30 peek:0AC9 joy2:down:30 wait:30 peek:0AC9
+# Port 1 down (pull back) / up (push).
+joy1:down:24 wait:30 peek:0AAB:2 joy1:up:12 wait:30 peek:0AAB:2
+# Port 1 right: ailerons right, then auto-centered after a few ticks.
+joy1:right:12 peek:0AA3:2 peek:0ABD peek:0E78 wait:60 peek:0AA3:2 peek:0ABD peek:0E78
+joy1:left:12 peek:0AA3:2 wait:60 peek:0AA3:2
+# Port 1 fire = view prefix; then H picks the right view.
+joy1:fire:12 wait:20 peek:00FC key:H:6 wait:120 peek:0ACA shot:joystick-1-right-view
+key:5:6 wait:20 key:T:6 wait:60 peek:0ACA
+# A key pressed while the stick is held is lost.
+down:L wait:2 joy1:down:30 up:L wait:30 peek:0AB5 peek:0AAB:2
+# Port 2 fire = guns (no effect outside war mode).
+joy2:fire:12 wait:30 peek:0AB2 shot:joystick-2
+cov:save:joystick

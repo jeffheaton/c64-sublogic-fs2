@@ -1,0 +1,19 @@
+# Gallery: Europe 1917. EUROPE 1917 = 1 in the editor (page 0, line 6); the exit loads mode 7
+# (the WWI area) and the war overlay. W declares war; a take-off north; enemy 4 placed ahead of
+# and above the flight path (as re/sessions/war.txt places it), attacking.
+#: 23-war-start: Europe 1917: the WWI area and the war overlay's status panel.
+#: 24-war-declared: W: war declared.
+#: 25-war-airborne: Airborne over the front.
+#: 26-war-enemy: Enemy 4 placed ahead and above, attacking.
+#: 27-war-enemy-closing: The enemy closing in.
+key:A:12 wait:60 key:B:12 wait:900
+key:E:6 wait:900 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:1:6 wait:24
+key:E:6 wait:1500 shot:23-war-start
+key:W:6 wait:200 shot:24-war-declared
+key:;:150 wait:650 key:B:6 wait:20 key:B:6 wait:20 key:B:6 wait:20
+wait:400 key:T:6 wait:20 key:T:6 wait:20 wait:600 shot:25-war-airborne
+poke:A9AF:00 poke:A9B0:0A poke:A9B1:DD poke:A9B2:88 poke:A9B3:00 poke:A9B4:00
+poke:A9B5:00 poke:A9B6:06 poke:A9B7:04 poke:A9C6:02
+wait:120 shot:26-war-enemy
+wait:160 shot:27-war-enemy-closing

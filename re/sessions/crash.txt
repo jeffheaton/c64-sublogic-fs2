@@ -1,0 +1,20 @@
+# Crash: take off, then push the nose down (T) and dive into the ground. At ground contact the
+# integrator's crash test ($356D: vertical speed high byte $0A51 <= -9 or |bank| >= 10) sets the
+# crash code $0834 = 4; on the next flip pass $F95D plays sound 2, clears the window, shows
+# 'CRASH !!!', waits ($F25B) and requests a reload of the current mode ($08BB = 1).
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+key:;:150 wait:480 key:B:6 wait:20 key:B:6 wait:20 key:B:6 wait:900 peek:5E:4 peek:0A50:2
+# Dive.
+key:T:6 wait:20 key:T:6 wait:20 key:T:6 wait:20 key:T:6 wait:20 key:T:6 wait:20 key:T:6 wait:20 peek:0AAB:2
+wait:200 peek:5E:4 peek:0A50:2 shot:crash-1-dive
+until:0834:!00:3000 peek:0834 peek:0A50:2 peek:0E59
+wait:40 shot:crash-2-message wait:40 peek:0834 peek:08BB shot:crash-3-message
+# The reload goes through the editor overlay (loaded from disk the first time), then the flight
+# overlay and the Chicago area are loaded again.
+until:A7E0:6B:1200 peek:A7E0:2 until:0901:4E:3000 pc:204B:3000 wait:300 peek:0834 peek:5E:4 peek:0A4C:2 peek:0AC9 peek:0983 shot:crash-4-reloaded
+cov:save:crash

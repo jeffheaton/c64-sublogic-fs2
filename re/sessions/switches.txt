@@ -1,0 +1,48 @@
+# Panel switches on the ground at Meigs: lights (L), flaps (N down / Y up), magnetos and mixture
+# (RETURN prefix, then digits 1-5 or ',' '.'), carb heat (CTRL+I), fuel tank (CTRL+F), CTRL+B,
+# CTRL+D, rudder (C/M), ailerons (F/H/G) and the throttle keys.
+# Peeks: lights $0AB5, flaps $0AB0, magneto label $0AB6 and switch bits $EE14/$EE15,
+# mixture $0A9A, carb heat $0AA9, selected item $FC, RPM/50 $09BE.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+peek:0AB5 peek:0AB0 peek:0AB6 peek:EE14:2 peek:0A9A peek:0AA9 peek:09BE
+shot:switches-0-start
+cov:on
+# Lights: L toggles $0AB5 (label LIGHTS-1 / LIGHTS-O).
+key:L:6 wait:60 peek:0AB5 shot:switches-1-lights-off
+key:L:6 wait:60 peek:0AB5
+# Flaps: N lowers by $20 per press up to $60, Y raises by $20.
+key:N:6 wait:30 key:N:6 wait:30 key:N:6 wait:30 key:N:6 wait:60 peek:0AB0 shot:switches-2-flaps-down
+key:Y:6 wait:30 key:Y:6 wait:60 peek:0AB0
+key:Y:6 wait:30 key:Y:6 wait:30 key:Y:6 wait:60 peek:0AB0
+# Magnetos: RETURN sets $FC = 3; 1 OFF, 2 R, 4 BOTH, 5 START; 3 sets L even without RETURN.
+key:RETURN:6 wait:20 peek:00FC key:1:6 wait:60 peek:0AB6 peek:EE14:2 peek:00FC shot:switches-3-mags-off
+wait:300 peek:09BE
+key:RETURN:6 wait:20 key:2:6 wait:60 peek:0AB6 peek:EE14:2 shot:switches-4-mags-r
+key:3:6 wait:60 peek:0AB6 peek:EE14:2 peek:00FC shot:switches-5-mags-l-no-prefix
+key:RETURN:6 wait:20 key:5:6 wait:10 peek:0AB6 wait:120 peek:0AB6 peek:EE14:2 peek:09BE shot:switches-6-mags-start
+key:RETURN:6 wait:20 key:4:6 wait:60 peek:0AB6 peek:EE14:2 peek:0836 shot:switches-7-mags-both
+# Mixture: after RETURN, ',' raises $0A9A (0..7) and '.' lowers it.
+key:RETURN:6 wait:20 key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:60 peek:0A9A shot:switches-8-mixture
+key:RETURN:6 wait:20 key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:60 peek:0A9A
+# Carb heat: CTRL+I toggles $0AA9 (CH / HT). CTRL must be down before I is scanned:
+# pressed in the same scan, I arrives first as plain $49 (ignored).
+down:CTRL wait:8 key:I:6 up:CTRL wait:60 peek:0AA9 shot:switches-9-carb-heat
+down:CTRL wait:8 key:I:6 up:CTRL wait:60 peek:0AA9
+# Fuel tank selector: CTRL+F selects $FC = $10; '.' / ',' move the selector $09C6 (0 left,
+# 1 right; clamped), redrawing the marker at (287, 179).
+down:CTRL wait:8 key:F:6 up:CTRL wait:20 peek:00FC key:.:6 wait:60 peek:09C6 shot:switches-10-right-tank
+key:.:6 wait:30 peek:09C6 key:,:6 wait:30 key:,:6 wait:60 peek:09C6
+# CTRL+B clears the altimeter offsets $09CE-$09D1; CTRL+D re-aligns the DG offset $08C0 from the
+# compass ($08C5 - heading + $0848 + $0846).
+down:CTRL wait:8 key:B:6 up:CTRL wait:30 peek:09CE:4
+down:CTRL wait:8 key:D:6 up:CTRL wait:30 peek:08C0:2 peek:08C5:2
+# Rudder: C left / M right (+-4; with AUTO-COORDINATION the ailerons follow); ailerons F / H.
+key:C:6 wait:20 key:C:6 wait:30 peek:0ABD peek:0AA3:2 key:M:6 wait:20 key:M:6 wait:30 peek:0ABD
+key:F:6 wait:20 key:F:6 wait:30 peek:0AA3:2 key:G:6 wait:30 peek:0AA3:2 peek:0ABD
+# Throttle: ';' up 8, ':' (COLON) down 8, DEL down 8.
+key:;:6 wait:20 key:;:6 wait:20 peek:0AC9 key:COLON:6 wait:20 peek:0AC9 key:DEL:6 wait:20 peek:0AC9
+cov:save:switches

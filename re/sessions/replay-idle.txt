@@ -1,0 +1,7 @@
+# Replay (ReplayTests.idleAtMeigs): regular flight sitting on the runway at Meigs for two
+# minutes. The prefix (the Meigs prefix of ReplaySessions: boot, color display, regular flight,
+# the Chicago area and the Meigs detail block loaded) ends at the top of the main loop ($204B),
+# where the recording and the port's replay start.
+cov:on
+wait:7200
+cov:save:replay-idle

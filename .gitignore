@@ -1,0 +1,50 @@
+.build/
+.build-*/
+.swiftpm/
+build/
+out/
+re/out/
+re/tools/__pycache__/
+.DS_Store
+.claude/
+
+# Never commit SubLogic's or Commodore's bytes or anything made from them: disk, program, cartridge,
+# tape, memory-expansion and ROM images, archives that may hold them, the mode library, lab
+# snapshots and coverage maps, recorded audio, and rendered frames (they show SubLogic's artwork).
+# Force-add (git add -f) only what is your own.
+*.d64
+*.D64
+*.g64
+*.g41
+*.d71
+*.d80
+*.d81
+*.d82
+*.x64
+*.nib
+*.nbz
+*.lnx
+*.p00
+*.reu
+*.prg
+*.crt
+*.t64
+*.tap
+*.rom
+*.bin
+*.bak
+chargen*
+*.vsf
+*.snap
+*.cov
+*.wav
+*.png
+*.zip
+*.7z
+*.rar
+*.gz
+*.tgz
+*.lha
+*.lzh
+*.sda
+*.sfx

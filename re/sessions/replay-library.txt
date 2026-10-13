@@ -1,0 +1,18 @@
+# Replay (ReplayMatrixTests): the editor's mode-library keys, then back to flight, so the main
+# loop's checkpoints after the editor check everything the keys did. library.txt ends inside the
+# editor after CTRL+Z (the format leaves no master disk to reload the flight overlay from), so a
+# replay of it stops checking at the editor's entry. Here: S saves user mode 10 (and makes it the
+# current mode), USER MODE 111 saves user mode 11, '+' recalls the current mode, CTRL+X loads the
+# library: on the master disk block 64 is the database-info overlay, so $C800 gets its bytes and
+# the mode reload reads overlay code as user mode 10's record. That record turns EUROPE 1917 on,
+# so E leaves the editor into mode 7: the war overlay ($B1EA) and the WWI area are loaded.
+# The keys are held 14 frames (the lab takes interrupts only at the poll points while recording).
+cov:on
+key:;:40 wait:60
+key:E:14 pc:2250:1500 wait:10
+key:S:14 pc:2250:600 wait:10
+key:1:14 wait:30 key:1:14 wait:30 key:1:14 wait:30 key:RETURN:14 pc:2250:600 wait:10
+key:PLUS:14 pc:2250:600 wait:10
+down:CTRL wait:8 key:X:14 up:CTRL pc:2250:3000 wait:10
+key:E:14 pc:204B:3000 wait:600 pc:204B:3000 wait:600
+cov:save:replay-library

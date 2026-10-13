@@ -1,0 +1,23 @@
+# All eight view directions and the down view, on the runway at Meigs (heading 360).
+# '5' arms the view prefix (selected item $FC = 1); the next T/Y/H/N/B/V/F/R/G sets $0ACA
+# (0 front, 2 front-right, 4 right, 6 rear-right, 8 rear, $0A rear-left, $0C left, $0E front-left,
+# $FF down) instead of moving a control. Each peek shows $0ACA and $FC after the pair.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+shot:views-front-start
+cov:on
+key:5:6 wait:20 key:Y:6 wait:120 peek:0ACA peek:00FC peek:0AAB:2 shot:views-y-front-right
+key:5:6 wait:20 key:H:6 wait:120 peek:0ACA peek:00FC shot:views-h-right
+key:5:6 wait:20 key:N:6 wait:120 peek:0ACA peek:00FC peek:0AB0 shot:views-n-rear-right
+key:5:6 wait:20 key:B:6 wait:120 peek:0ACA peek:00FC peek:0AAB:2 shot:views-b-rear
+key:5:6 wait:20 key:V:6 wait:120 peek:0ACA peek:00FC peek:0AAE shot:views-v-rear-left
+key:5:6 wait:20 key:F:6 wait:120 peek:0ACA peek:00FC peek:0AA3:2 shot:views-f-left
+key:5:6 wait:20 key:R:6 wait:120 peek:0ACA peek:00FC peek:0AAE shot:views-r-front-left
+key:5:6 wait:20 key:G:6 wait:120 peek:0ACA peek:00FC shot:views-g-down
+key:5:6 wait:20 key:T:6 wait:120 peek:0ACA peek:00FC peek:0AAB:2 shot:views-t-front
+# Without the '5' prefix the same keys move the controls again (B: elevator +4).
+key:B:6 wait:30 peek:0ACA peek:0AAB:2
+cov:save:views

@@ -1,0 +1,26 @@
+# ATIS reception at Meigs: tune COM 124.85 -> 121.30 (the Meigs Field ATIS record in the Chicago
+# area data) and watch the teletype ($F239) type the broadcast into the window.
+# COM frequency BCD $08B3 (kHz) / $08B4 (MHz); COM search flags $0937/$0938; the op 1E record
+# match copies the parameters to $0939-$0940, points $0958 at the text and clears $0941.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+# MHz: 124 -> 121.
+down:CTRL wait:8 key:C:6 up:CTRL wait:20 peek:00FC
+key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:30 peek:08B3:2 peek:0937:2
+# kHz: .85 -> .30 (nine steps up through .00).
+down:CTRL wait:8 key:C:6 wait:6 key:C:6 up:CTRL wait:12 peek:00FC
+key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:20
+key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:20 peek:08B3:2 peek:0937:2
+wait:60 peek:0937:2 peek:0939:8 peek:0941 peek:0958:2 shot:atis-1
+wait:150 shot:atis-2
+wait:150 shot:atis-3
+wait:150 shot:atis-4
+wait:150 shot:atis-5
+wait:150 shot:atis-6
+# The broadcast is typed once per tune ($0941 one-shot); afterward the view returns.
+wait:1200 shot:atis-7-after
+cov:save:atis

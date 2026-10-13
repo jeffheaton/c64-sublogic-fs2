@@ -1,0 +1,34 @@
+# Editor round trip, mode save ('S') and mode recall ('+').
+# 1. E opens the editor (overlay 1, loaded from disk the first time). RETURN moves the cursor one
+#    LINE down (21 stops per page, including blank and heading lines), wrapping to the other page;
+#    '-' moves up (from the first line it wraps to page 1, line 21). Typed digits are accepted by
+#    RETURN, '-' or E.
+# 2. Set HEADING (page 0, line 15) to 90 (typed 9, 5, DEL, 0: DEL is backspace), page to page 1
+#    and on round to page 0, exit with E.
+# 3. 'S' in flight saves the situation as user mode 10 (record at $C800) and makes it the current
+#    mode ($0963 = 10); '+' (PLUS) then recalls mode 10. USER MODE 0 in the editor recalls built-in
+#    mode 0 (12:00, heading 0, throttle 0); the editor stays open until E is pressed again.
+# Peeks: heading $0A13:$0A14 (binary angle), hours $0983, mode request $08BB, current mode $0963,
+# user mode 10 record $C800.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+peek:0A13:2 peek:0983 peek:0963 peek:C800:8
+cov:on
+key:E:6 pc:2250:1500 wait:10 text shot:editor-1-page0
+key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+key:9:6 wait:24 key:5:6 wait:24 key:DEL:6 wait:24 key:0:6 wait:24 text
+key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+wait:10 text shot:editor-2-page1
+key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24
+wait:10 text
+key:-:6 wait:24 text
+key:E:6 pc:204B:3000 pc:204B:3000 wait:200 peek:0A13:2 peek:0983 shot:editor-3-heading90
+key:;:60 wait:120 peek:0AC9
+key:S:6 wait:12 peek:08BB pc:204B:3000 pc:204B:3000 wait:200 peek:08BB peek:0963 peek:C800:16
+key:;:6 wait:30 peek:0AC9 key:PLUS:6 wait:12 peek:08BB pc:204B:3000 pc:204B:3000 wait:200 peek:08BB peek:0963 peek:0A13:2 peek:0983 peek:0AC9
+key:E:6 pc:2250:1500 wait:10 key:0:6 wait:24 key:E:6 pc:2250:600 wait:10 text
+key:E:6 pc:204B:3000 pc:204B:3000 wait:200 peek:0963 peek:0A13:2 peek:0983 peek:0AC9 shot:editor-4-user-mode-0
+cov:save:editor

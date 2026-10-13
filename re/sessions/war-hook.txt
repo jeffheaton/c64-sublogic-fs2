@@ -1,0 +1,21 @@
+# The $FD00 hook in Europe 1917. R sets $08D7 (in every mode); in war mode the main loop's flip
+# pass then shifts the $08D7 request out and calls $FD00 ($20BB-$20C0). $FD00-$FFF1 is zero in
+# this image, so the CPU runs a chain of break interrupts ($FD00, $FD02, ... $FFF0): each goes
+# through the IRQ vector $FFFE to the raster IRQ handler $2285 (counting jiffies) and returns two
+# bytes on. At $FFF2 the residue bytes read as a call to $20D5 (the draw sequence); the main loop
+# carries on with the two return addresses (4 bytes) left on the stack. Each R in war mode thus
+# leaks 4 stack bytes and adds roughly 180 jiffies ($34), which the next integrator pass sees as dt.
+# Peeks show SP at the top of the main loop ($204B) and the jiffy counter $34.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+key:E:6 pc:2250:1500 wait:10 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:1:6 wait:24
+key:E:6 pc:204B:3000 pc:204B:3000 wait:600 peek:0969 peek:FD00:8 peek:FFF0:8
+cov:on
+pc:204B:600 peek:0034 pc:204B:600 peek:0034
+key:R:6 until:08D7:01:60 peek:0034 until:08D7:00:600 peek:0034 pc:204B:600 peek:0034
+pc:204B:600 peek:0034
+key:R:6 until:08D7:01:60 until:08D7:00:600 pc:204B:600 peek:0034 wait:120 shot:war-hook-1
+cov:save:war-hook

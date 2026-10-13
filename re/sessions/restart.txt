@@ -1,0 +1,22 @@
+# RUN/STOP + RESTORE restart. RESTORE raises an NMI; the handler $2700 restarts only when slot 3
+# of the held-key table ($089E) holds RUN/STOP (matrix index $3F) and the one-shot $26FF is 0: it
+# increments $26FF and jumps to $A7E2 (the cold-start entry; the cold-start overlay is loaded
+# again, which also clears $26FF), back to the title and the display prompt.
+# RESTORE alone (or with another key held) just returns from the interrupt and changes nothing.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+key:;:60 wait:120 peek:0AC9 peek:089B:4 peek:26FF
+# RESTORE alone.
+nmi wait:60 peek:0AC9 peek:26FF peek:A7E0:2 shot:restart-1-restore-alone
+# RESTORE with L held (slot 3 = $2A): still nothing.
+down:L wait:10 peek:089B:4 nmi wait:10 up:L wait:60 peek:26FF peek:0AC9
+# RUN/STOP held (it also queues P = pause), then RESTORE.
+down:RUNSTOP wait:10 peek:089B:4 nmi wait:4 peek:26FF up:RUNSTOP
+pc:2250:9000 peek:26FF peek:A7E0:2 wait:30 shot:restart-2-title key:A:12
+pc:2250:600 shot:restart-3-mode-prompt key:B:12
+pc:204B:3000 until:0901:4E:3000 pc:204B:3000 wait:120 peek:0AC9 peek:0983:2 shot:restart-4-meigs
+cov:save:restart

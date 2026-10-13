@@ -1,0 +1,9 @@
+# Replay (ReplayTests.pause): throttle up, P pauses (the key wait polls the 10 Hz tick; the 5 Hz
+# and 1 Hz work stop), B ends the pause (consumed), RUN/STOP pauses again, SPACE resumes.
+cov:on
+key:;:120 wait:120
+key:P:6 wait:600
+key:B:6 wait:300
+key:RUNSTOP:6 wait:300
+key:SPACE:6 wait:300
+cov:save:replay-pause

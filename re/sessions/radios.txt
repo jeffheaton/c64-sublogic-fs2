@@ -1,0 +1,59 @@
+# Radio tuning on the ground at Meigs: COM (CTRL+C), NAV1/NAV2 (CTRL+N, then 1/2), OBS (CTRL+V,
+# then 1/2), transponder (CTRL+T and CTRL+X) and ADF (A, after enabling it in the editor).
+# CTRL+key repeats inside the quick-repeat window $091C step to the next sub-field; ',' lowers and
+# '.' raises the selected item ($FC).
+# Peeks: COM ASCII $21B0-$21B3, NAV1 $21B7-$21BA, NAV2 $21BE-$21C1, NAV select $0AB7,
+# OBS1 $2196 / OBS2 $2199 (2-degree units), OBS select $0ACB, transponder $21DD-$21E0,
+# ADF digits $E7FA-$E7FC, ADF enable $09AA, selected item $FC.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+peek:21B0:4 peek:21B7:4 peek:21BE:4 peek:2196:4 peek:21DD:4 peek:E7FA:3 peek:09AA
+cov:on
+# COM: CTRL+C selects MHz (FC 4); '.' twice; a quick second CTRL+C selects kHz (FC 5).
+down:CTRL wait:8 key:C:6 up:CTRL wait:20 peek:00FC
+key:.:6 wait:20 key:.:6 wait:30 peek:21B0:4
+down:CTRL wait:8 key:C:6 wait:6 key:C:6 up:CTRL wait:12 peek:00FC
+key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:30 peek:21B0:4 shot:radios-1-com
+# kHz wraps: ',' from .00 goes to .95 (no carry into MHz).
+down:CTRL wait:8 key:C:6 wait:6 key:C:6 up:CTRL wait:12 peek:00FC
+key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:30 peek:21B0:4
+# NAV: CTRL+N selects MHz (FC 6) of the NAV chosen by $0AB7; '2' selects NAV2.
+down:CTRL wait:8 key:N:6 up:CTRL wait:20 peek:00FC
+key:.:6 wait:20 key:.:6 wait:30 peek:21B7:4 peek:21BE:4
+key:2:6 wait:20 peek:0AB7 key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:30 peek:21B7:4 peek:21BE:4
+down:CTRL wait:8 key:N:6 wait:6 key:N:6 up:CTRL wait:12 peek:00FC
+key:,:6 wait:20 key:,:6 wait:30 peek:21BE:4 shot:radios-2-nav
+key:1:6 wait:20 peek:0AB7
+# OBS: CTRL+V selects $FC = $0C; '.' adds 2 degrees per press; '2' switches to OBS2.
+down:CTRL wait:8 key:V:6 up:CTRL wait:20 peek:00FC
+key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:20 key:.:6 wait:30 peek:2196:4
+key:2:6 wait:20 peek:0ACB key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:30 peek:2196:4 shot:radios-3-obs
+key:1:6 wait:20 peek:0ACB
+# Transponder: CTRL+T (not slewing) or CTRL+X select digit 1 ($FC 8); quick repeats step to
+# digits 2-4 ($FC 9-$0B); '.' raises the octal digit.
+down:CTRL wait:8 key:T:6 up:CTRL wait:20 peek:00FC key:.:6 wait:30 peek:21DD:4
+down:CTRL wait:8 key:X:6 wait:6 key:X:6 up:CTRL wait:12 peek:00FC key:.:6 wait:20 key:.:6 wait:30 peek:21DD:4
+down:CTRL wait:8 key:X:6 wait:6 key:X:6 wait:6 key:X:6 wait:6 key:X:6 up:CTRL wait:12 peek:00FC
+key:,:6 wait:30 peek:21DD:4 shot:radios-4-xpdr
+# ADF while disabled: A selects $FC $0D but ',' '.' leave the digits alone ($09AA = 0).
+key:A:6 wait:20 peek:00FC key:.:6 wait:30 peek:E7FA:3
+# Left SHIFT is matrix code $01, the same as CTRL+A: it also selects the ADF.
+key:RETURN:6 wait:20 peek:00FC key:LSHIFT:6 wait:20 peek:00FC
+# Enable the ADF in the editor: '-' from the first field goes to page 1, line 21 (ADF ENABLE).
+key:E:6 pc:2250:1200 wait:10 key:-:6 wait:30 key:1:6 wait:30 text key:E:6 pc:204B:1200 wait:120 peek:09AA
+# ADF digits: A selects digit 1 ($FC $0D); quick repeats select digits 2 and 3 ($0E, $0F) and then
+# the fuel tank ($10). Tune 287 -> 332, the NDB 19 km south-west of Meigs (op 05 record in the
+# Chicago area): $E7F3 = 1 (station found), station position copied to $0927-$092E.
+key:A:6 wait:20 peek:00FC key:.:6 wait:30 peek:E7FA:3
+key:A:6 wait:6 key:A:6 wait:12 peek:00FC key:.:6 wait:24 key:.:6 wait:24 key:.:6 wait:24 key:.:6 wait:24 key:.:6 wait:30 peek:E7FA:3
+key:A:6 wait:6 key:A:6 wait:6 key:A:6 wait:12 peek:00FC key:.:6 wait:24 key:.:6 wait:24 key:.:6 wait:24 key:.:6 wait:24 key:.:6 wait:30 peek:E7FA:3
+wait:300 peek:E7F3:3 peek:0927:8 shot:radios-5-adf
+key:A:6 wait:20 key:,:6 wait:30 peek:E7FA:3 key:.:6 wait:30 peek:E7FA:3
+key:A:6 wait:6 key:A:6 wait:6 key:A:6 wait:6 key:A:6 wait:12 peek:00FC
+# Wraps: COM MHz 126 -> 118 -> 135 (','), NAV1 MHz 110 -> 108 -> 117.
+down:CTRL wait:8 key:C:6 up:CTRL wait:20 key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:30 peek:21B0:4
+down:CTRL wait:8 key:N:6 up:CTRL wait:20 key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:20 key:,:6 wait:30 peek:21B7:4
+cov:save:radios

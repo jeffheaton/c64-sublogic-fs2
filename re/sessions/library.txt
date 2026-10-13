@@ -1,0 +1,28 @@
+# Editor mode-library keys. Inside the editor: S saves the current values as user mode
+# $0963 + 10 ($B7A5), '+' (PLUS) recalls the current mode ($B7C3), USER MODE 111 saves user mode 11
+# (110-124 = save to n - 100), CTRL+X loads the library (logical block 64) into $C800 and reloads
+# the mode ($B1F1), and CTRL+Z formats the disk in the drive ('N0:SUBLOGIC CORP.,FS') and writes
+# $C800 as block 64 ($B223). On the master disk block 64 is the database-info overlay, so CTRL+X
+# fills the user modes with its bytes. The lab's 1541 works on an in-memory copy of the .d64, so
+# CTRL+Z only formats that copy; the session ends there because the master disk is gone.
+# User mode n's 65-byte record is at $C800 + (n - 10) * 65.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+peek:C800:8 peek:C841:8
+cov:on
+key:;:40 wait:60 peek:0AC9
+key:E:6 pc:2250:1500 wait:10
+# S in the editor: save as user mode 10.
+key:S:6 pc:2250:600 wait:10 peek:C800:16 peek:0963
+# USER MODE 111: save as user mode 11.
+key:1:6 wait:24 key:1:6 wait:24 key:1:6 wait:24 key:RETURN:6 pc:2250:600 wait:10 peek:C841:16 text
+# '+' in the editor: recall the current mode.
+key:PLUS:6 pc:2250:600 wait:10 peek:0963
+# CTRL+X: load the library from the disk (block 64).
+down:CTRL wait:8 key:X:6 up:CTRL pc:2250:3000 wait:10 peek:C800:16 text
+# CTRL+Z: format the (in-memory) disk and save the library as block 64.
+down:CTRL wait:8 key:Z:6 up:CTRL pc:2250:6000 wait:10 peek:C800:16 text
+cov:save:library

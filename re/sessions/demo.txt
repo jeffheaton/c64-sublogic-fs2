@@ -1,0 +1,5 @@
+# Boot, color display, DEMO mode (self-flying takeoff from Meigs, mode 2).
+pc:2250:9000 key:A:12
+pc:2250:600 key:A:12
+pc:204B:3000
+wait:3600

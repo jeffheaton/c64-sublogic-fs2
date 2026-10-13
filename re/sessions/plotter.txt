@@ -1,0 +1,32 @@
+# Course plotter: Q sets $0E70; on the next flip pass $F627 shows the COURSE PLOTTER SYSTEM menu
+# in the window and reads keys through the wait-for-key routine $2250 until E returns to flight.
+# A = begin normal recording, C = begin precision recording, B = display the plot, D = off.
+# Recording writes a scenery display list at $D000 (RAM under I/O): op 07 origin with scale 6
+# (normal) or 4 (precision) and the 12 position bytes $5A-$65, op 1C (pen), op 01 moveto (0, 0, 0)
+# and the end marker $79; then each segment overwrites the end marker with a 7-byte lineto
+# (02 dx dy dz) and a new $79, through the pointer $0E83/$0E84 ($D016 after the header). It sets
+# $08BC = 2. Display mode $0E82 runs the list through the scenery VM.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+# Q: menu; A: normal recording; E: back to flight.
+key:Q:6 pc:2250:600 wait:30 peek:0E70 shot:plotter-1-menu
+key:A:6 wait:30 peek:0E82:3 peek:08BC key:E:6 wait:120 peek:D000:16
+# Take off and climb (see takeoff.txt), then a right turn back toward Meigs.
+key:;:150 wait:550 key:B:6 wait:20 key:B:6 wait:20 key:B:6 wait:900 peek:0E82:3 shot:plotter-2-recording
+key:H:6 wait:20 key:H:6 wait:20 key:H:6 wait:1500 key:G:6 wait:600 peek:0E82:3
+# C: precision recording for a while.
+key:Q:6 pc:2250:600 wait:30 key:C:6 wait:30 key:E:6 wait:900 peek:0E82:3
+# B: display the plot, in the front view, the rear-right view and the radar view.
+key:Q:6 pc:2250:600 wait:30 key:B:6 wait:30 key:E:6 wait:200 peek:0E82:3 shot:plotter-3-display
+key:5:6 wait:20 key:N:6 wait:200 shot:plotter-4-display-rear-right
+key:5:6 wait:20 key:T:6 wait:20
+key:4:6 wait:200 shot:plotter-5-display-radar
+key:,:6 wait:30 key:,:6 wait:30 key:,:6 wait:30 key:,:6 wait:200 shot:plotter-6-display-radar-out
+key:5:6 wait:60
+# D: off.
+key:Q:6 pc:2250:600 wait:30 key:D:6 wait:30 key:E:6 wait:200 peek:0E82:3 shot:plotter-7-off
+cov:save:plotter

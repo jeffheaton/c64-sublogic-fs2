@@ -1,0 +1,11 @@
+# Replay (ReplayTests.leaveEurope1917): the war-exit check $213D. The prefix (in the test) leaves
+# `$0E7C` = 7 with the current mode `$0963` = 0 at the top of the main loop, the state the editor
+# leaves when EUROPE 1917 is turned off and another mode recalled; the next 1-in-8 pass ($22 & 7
+# = 4) jumps to $A7E2 from the main loop: the flight overlay's slot reloads overlay 0, the init
+# chain runs again from the boot loads, the title and the prompts (A, B), then regular flight.
+cov:on
+pc:2250:9000 wait:30 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:300
+cov:save:replay-warexit

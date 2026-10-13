@@ -1,0 +1,5 @@
+# Gallery: the black-and-white display (B at the display prompt), the mode prompt and Meigs.
+#: 03-mode-prompt-bw: The mode prompt after B (black and white display).
+#: 04-meigs-bw: Regular flight at Meigs on the black and white display.
+key:B:12 wait:60 shot:03-mode-prompt-bw
+key:B:12 wait:1200 shot:04-meigs-bw

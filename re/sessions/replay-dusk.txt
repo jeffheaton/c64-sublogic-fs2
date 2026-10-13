@@ -1,0 +1,9 @@
+# Replay (ReplayTests.duskAndNight): the time of day (season 0: day until 19:00, dusk until
+# 19:30, then night). The prefix (in the test) sets the clock to 19:29:40 by day: the first phase
+# 0 pass's $EBF2 switches to dusk, the clock's 19:30 to night. Each switch rewrites the window
+# border operand `$22B5` (stored to $D020 by the window-phase IRQ) and the window's screen RAM.
+# L switches the panel lights off and on again in the dark (the instrument masks).
+cov:on
+wait:1800
+key:L:14 wait:300 key:L:14 wait:300
+cov:save:replay-dusk

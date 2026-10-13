@@ -1,0 +1,15 @@
+# Database info screen: CTRL+E (code $05) increments $0E87; on the next flip pass the main loop
+# calls slot $A7FA, which loads overlay 4 (block 64) and runs it at $A86A: it clears the window,
+# lists the scenery databases and waits for a key. Afterward the flight overlay and the scenery
+# area are loaded again.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+down:CTRL wait:8 key:E:6 up:CTRL wait:4 peek:0E87
+pc:2250:1500 wait:30 peek:0E87 peek:A7E0:2 shot:database-1
+wait:300 peek:08CC shot:database-2-still-waiting
+key:SPACE:6 pc:204B:3000 pc:204B:3000 wait:200 peek:A7E0:2 peek:0900:4 shot:database-3-back
+cov:save:database

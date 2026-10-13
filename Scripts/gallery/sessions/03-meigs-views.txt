@@ -1,0 +1,26 @@
+# Gallery: regular flight at Meigs Field, every view direction once ('5' then the direction key),
+# the radar view ('4') and its zoom (',').
+#: 05-meigs-start: Regular flight: Meigs Field runway 36 at the start, the Chicago area and the Meigs detail block streamed in.
+#: 10-view-front-right: View front right (5 Y).
+#: 11-view-right: View right (5 H).
+#: 12-view-rear-right: View rear right (5 N).
+#: 13-view-rear: View rear (5 B).
+#: 14-view-rear-left: View rear left (5 V).
+#: 15-view-left: View left (5 F): downtown Chicago.
+#: 16-view-front-left: View front left (5 R).
+#: 17-view-down: View down (5 G).
+#: 18-view-front: View front again (5 T).
+#: 19-radar: Radar (map) view (4).
+#: 20-radar-zoom: Radar view after two ',' presses (the map height changed).
+key:A:12 wait:60 key:B:12 wait:1200 shot:05-meigs-start
+key:5:6 wait:20 key:Y:6 wait:150 shot:10-view-front-right
+key:5:6 wait:20 key:H:6 wait:150 shot:11-view-right
+key:5:6 wait:20 key:N:6 wait:150 shot:12-view-rear-right
+key:5:6 wait:20 key:B:6 wait:150 shot:13-view-rear
+key:5:6 wait:20 key:V:6 wait:150 shot:14-view-rear-left
+key:5:6 wait:20 key:F:6 wait:150 shot:15-view-left
+key:5:6 wait:20 key:R:6 wait:150 shot:16-view-front-left
+key:5:6 wait:20 key:G:6 wait:150 shot:17-view-down
+key:5:6 wait:20 key:T:6 wait:150 shot:18-view-front
+key:4:6 wait:200 shot:19-radar
+key:,:6 wait:40 key:,:6 wait:200 shot:20-radar-zoom

@@ -1,0 +1,9 @@
+# Replay (ColdInitTests.coldBootBlackAndWhiteDemo): from the stage-2 handoff, the other answers
+# of the prompts: C (ignored: the display prompt waits again), B (black and white: $0E61/$0E63/
+# $0E65 = $FC/$CB/$CB, $0E69 = 0), then A at the mode prompt (demo: $095B + 1); the main loop's
+# demo check then asks the editor overlay for mode 2.
+cov:on
+pc:2250:9000 key:C:12 wait:30 key:B:12
+pc:2250:600 key:A:12
+pc:204B:3000 wait:1500
+cov:save:replay-coldboot-bw

@@ -1,0 +1,12 @@
+# Replay (ReplayTests.crash): take off, dive into the ground with T: the crash ($0834 = 4), the
+# 'CRASH !!!' message with its delay, the mode reload through the editor overlay (loaded from
+# disk; bridged), then the flight overlay and the Chicago area and Meigs detail streamed in
+# again ($0901 is cleared by the overlay loads, then the detail sets it again).
+cov:on
+key:;:150 wait:480 key:B:14 wait:30 key:B:14 wait:30 key:B:14 wait:900
+key:T:14 wait:30 key:T:14 wait:30 key:T:14 wait:30 key:T:14 wait:30 key:T:14 wait:30 key:T:14 wait:30
+until:0834:!00:3000
+until:A7E0:6B:1200
+until:0901:00:3000
+until:0901:4E:3000 pc:204B:3000 wait:300
+cov:save:replay-crash

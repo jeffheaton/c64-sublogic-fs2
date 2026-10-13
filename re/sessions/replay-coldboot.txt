@@ -1,0 +1,11 @@
+# Replay (ColdInitTests.coldBootReplay): from the stage-2 handoff ($A7E2): the boot loads, the TOD
+# calibration, the title with the display prompt (A: color), the mode prompt (B: regular
+# flight), the panel's initial state, the flight overlay's first load at $2048, the Chicago area
+# and the Meigs detail streamed in, ten seconds of flight. (The recorder starts at the handoff,
+# so the first poll delivers every raster event since cycle 0.)
+cov:on
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:600
+cov:save:replay-coldboot

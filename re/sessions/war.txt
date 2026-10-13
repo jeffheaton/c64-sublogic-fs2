@@ -1,0 +1,92 @@
+# Europe 1917 war game. EUROPE 1917 = 1 in the editor (page 0, line 6); the editor exit forces
+# built-in mode 7 (the WWI area) and loads the war overlay (overlay 2, end word $B1EA), which the
+# main loop runs through slot $A7EE every pass.
+# - W declares war ($0ACC = 1, then 3 once 'WAR !!!!' is shown with its busy-wait delay).
+# - SPACE fires the guns when airborne ($2C03: $0AB2 = 3-frame burst, ammo $0AA5 -1 per shot);
+#   on the ground SPACE is the brake.
+# - X drops a bomb ($2B79: bombs $08E8 '5' -> '4', whistle $CD04).
+# - G after '5' is the bombsight (down view).
+# - Enemies: six 28-byte records at $A95B ([0-2] east, [3-5] altitude, [6-8] north, [10] in-sight
+#   flag, [11-14] trigger corner, [15-18] attack-zone corner, [19-21] per-axis steps, [22] fire
+#   range, [23] state 1 dormant / 2 attacking). Enemy 4 ($A9AF, state $A9C6) is the only one whose
+#   attack zone includes the base, so the session PLACES it with pokes (an experiment: a scripted
+#   dogfight is impractical): once 4 units ahead and above the flight path, where the guns kill it
+#   (IN RANGE; score $08D1, kills $08B2), and once level with the aircraft, where it fires
+#   (ENEMYFIRE; hits taken $08B7, damage $B19E).
+# - The status panel rotates AMMO / SCORE / BOMBS / HITS every 4 passes.
+# Prefix: regular.txt, then wait until the Chicago area and the Meigs detail block have loaded.
+pc:2250:9000 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000
+until:0901:4E:3000 pc:204B:3000 wait:60
+cov:on
+key:E:6 pc:2250:1500 wait:10 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:RETURN:6 wait:24 key:1:6 wait:24 text
+key:E:6 pc:204B:3000 pc:204B:3000 wait:600
+peek:0969 peek:0963 peek:A7E0:2 peek:0900:4 peek:0838 peek:0ACC peek:0AA5:2 peek:08E8 peek:08D1:2 peek:08B7 shot:war-01-start
+wait:300 shot:war-02
+# Declare war.
+key:W:6 wait:30 peek:0ACC wait:120 peek:0ACC shot:war-03-declared
+# Take off north and climb gently (elevator 24, then 16).
+key:;:150 wait:650 key:B:6 wait:20 key:B:6 wait:20 key:B:6 wait:20 peek:0AAB:2
+wait:400 key:T:6 wait:20 key:T:6 wait:20 peek:0AAB:2 wait:600 peek:5A:C shot:war-04-airborne
+# Enemy 4 placed 4 units ahead (east $DD0A, north $0406) and above the flight path (altitude
+# $88), attacking; SPACE is held while it closes (one shot per auto-repeat) until it is shot down.
+poke:A9AF:00 poke:A9B0:0A poke:A9B1:DD poke:A9B2:88 poke:A9B3:00 poke:A9B4:00
+poke:A9B5:00 poke:A9B6:06 poke:A9B7:04 poke:A9C6:02
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2 shot:war-kill-00
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2 shot:war-kill-03
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2 shot:war-kill-06
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2 shot:war-kill-09
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+down:SPACE
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2 shot:war-kill-12
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2 shot:war-kill-15
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2 shot:war-kill-18
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2 shot:war-kill-21
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2 shot:war-kill-24
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+up:SPACE
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2 shot:war-kill-27
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+wait:40 peek:A9AF:9 peek:A9C6 peek:A9B9 peek:0AA5 peek:08D1:2 peek:08B2
+# Enemy 4 again, level with the aircraft: it closes and fires.
+peek:5A:C
+poke:A9AF:00 poke:A9B0:0A poke:A9B1:DD poke:A9B2:82 poke:A9B3:00 poke:A9B4:00
+poke:A9B5:00 poke:A9B6:09 poke:A9B7:04 poke:A9C6:02
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7 shot:war-hit-00
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7 shot:war-hit-03
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7 shot:war-hit-06
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7 shot:war-hit-09
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7 shot:war-hit-12
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7
+wait:40 peek:5E:4 peek:A9AF:9 peek:08B7 shot:war-hit-15
+# A bomb, then the bombsight.
+key:X:6 wait:10 peek:08E8 wait:30 shot:war-06-bomb wait:300 shot:war-07-bomb-after
+key:5:6 wait:20 key:G:6 wait:200 shot:war-08-bombsight
+key:5:6 wait:20 key:T:6 wait:200 peek:08E8 peek:08D1:2 peek:08B2 peek:08B7 peek:09BF shot:war-09-end
+cov:save:war

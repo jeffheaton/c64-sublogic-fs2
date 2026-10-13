@@ -1,0 +1,12 @@
+# Replay (ReplayRestartTests.runStopRestore): RESTORE alone does nothing; RUN/STOP held first
+# (slot 3; it also queues the pause), then RESTORE: the NMI handler $2700 takes the cold restart,
+# a jump to $A7E2 (the flight overlay's slot reloads overlay 0, the init chain runs again from the
+# boot loads), the title and the prompts (A, B), and regular flight again.
+cov:on
+key:;:60 wait:120
+nmi wait:60
+down:RUNSTOP wait:10 nmi wait:4 up:RUNSTOP
+pc:2250:9000 wait:30 key:A:12
+pc:2250:600 key:B:12
+pc:204B:3000 wait:300
+cov:save:replay-restart
