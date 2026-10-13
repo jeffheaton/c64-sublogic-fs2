@@ -9,6 +9,11 @@
 #   make web-core   build the core modules for WebAssembly (the portability guard)
 #   make web        the web build, assembled into build/web (with the deploy disk when there is one)
 #   make web-serve  serve build/web on http://localhost:8064 with the isolation headers
+#   make web-disk   the deploy disk (fs2disk): build/web-disk/FlightSimulatorII.d64, from $FS2_D64 or
+#                   the app's imported copy (only the port's blocks, the crack's text blanked)
+#   make web-audit  the audits on fs2.wasm and the deploy disk, and no .d64 tracked by git
+#   make web-check  the port native and as wasm (under Node's V8) print the same digests; 30 nested
+#                   restarts as wasm (the stack)
 #
 # In sandboxed shells, SwiftPM has to run outside the sandbox.
 #
@@ -46,7 +51,12 @@ WEB      := build/web
 WEB_DISK := build/web-disk/FlightSimulatorII.d64
 WASM_OPT ?= $(shell command -v wasm-opt 2>/dev/null)
 
-.PHONY: all app check-app test audit lab clean icon web-core web web-serve
+# The user's disk: $FS2_D64, else the copy the Mac app imported.
+SOURCE_D64 ?= $(or $(FS2_D64),$(HOME)/Library/Application Support/FS2/FlightSimulatorII.d64)
+
+WEB_CHECK := build/web-check
+
+.PHONY: all app check-app test audit lab clean icon web-core web web-serve web-disk web-audit web-check
 
 all: app
 
@@ -130,6 +140,46 @@ web:
 web-serve:
 	Scripts/serve-web.py "$(WEB)" 8064
 
+web-disk:
+	@test -f "$(SOURCE_D64)" || { echo "error: no disk image at $(SOURCE_D64) (set FS2_D64)"; exit 1; }
+	mkdir -p "$(dir $(WEB_DISK))"
+	$(CAPPED) $(BUILD_TIMEOUT) $(SWIFT) run -c release fs2disk "$(SOURCE_D64)" "$(WEB_DISK)"
+	@shasum -a 256 "$(WEB_DISK)"
+
+# The audits of `make audit` on the web build: fs2.wasm holds no SubLogic bytes and names nothing
+# of the crack; the deploy disk is fs2disk's image of the user's disk; git tracks no disk image.
+# (The page's own files are tracked, so the repository audit covers them.)
+web-audit: web
+	@if git ls-files | grep -i -E '\.(d64|d71|d81|g64|prg|rom)$$'; then \
+		echo "error: git tracks a disk or ROM image"; exit 1; fi
+	$(CAPPED) $(BUILD_TIMEOUT) $(SWIFTLY) run swift build +$(WASM_SWIFT_VERSION) --swift-sdk $(WASM_SDK) -c release \
+		--package-path Scripts/wasm-baseline --scratch-path .build-web-baseline
+	mkdir -p build/web-audit
+	@baseline="$$($(SWIFTLY) run swift build +$(WASM_SWIFT_VERSION) --swift-sdk $(WASM_SDK) -c release \
+		--package-path Scripts/wasm-baseline --scratch-path .build-web-baseline --show-bin-path)/WasmBaseline.wasm"; \
+	if [ -n "$(WASM_OPT)" ]; then "$(WASM_OPT)" -Oz --strip-debug --strip-producers "$$baseline" -o build/web-audit/baseline.wasm; \
+	else cp "$$baseline" build/web-audit/baseline.wasm; fi
+	FS2_AUDIT_BINARY="$(CURDIR)/$(WEB)/fs2.wasm" FS2_AUDIT_BASELINE="$(CURDIR)/build/web-audit/baseline.wasm" \
+	FS2_AUDIT_DISK="$(if $(wildcard $(WEB)/FlightSimulatorII.d64),$(CURDIR)/$(WEB)/FlightSimulatorII.d64,)" \
+		$(CAPPED) $(AUDIT_TIMEOUT) $(SWIFT) test --filter '$(AUDIT_SUITES)|DeployDiskTests'
+
+# fs2check drives the port inline with a fake clock and a scripted player and prints digests of
+# the frames, the sound and memory: natively and as wasm they must be identical. Needs Node.
+web-check:
+	@test -f "$(SOURCE_D64)" || { echo "error: no disk image at $(SOURCE_D64) (set FS2_D64)"; exit 1; }
+	@command -v node >/dev/null || { echo "error: web-check runs the wasm under Node (not found)"; exit 1; }
+	$(CAPPED) $(BUILD_TIMEOUT) $(SWIFT) build -c release --product fs2check
+	$(WASM_BUILD) --product fs2check
+	mkdir -p "$(WEB_CHECK)"
+	"$$($(SWIFT) build -c release --show-bin-path)/fs2check" session < "$(SOURCE_D64)" \
+		| grep -v '^stack' > "$(WEB_CHECK)/native.txt"
+	@wasm="$$($(SWIFTLY) run swift build +$(WASM_SWIFT_VERSION) --swift-sdk $(WASM_SDK) -c release \
+		--disable-default-traits --scratch-path .build-web --show-bin-path)/fs2check.wasm"; \
+	node --no-warnings Scripts/run-wasi.mjs "$$wasm" session < "$(SOURCE_D64)" | grep -v '^stack' > "$(WEB_CHECK)/wasm.txt" && \
+	diff "$(WEB_CHECK)/native.txt" "$(WEB_CHECK)/wasm.txt" && \
+	echo "web-check: native and wasm identical ($$(wc -l < "$(WEB_CHECK)/native.txt" | tr -d ' ') digests)" && \
+	node --no-warnings Scripts/run-wasi.mjs "$$wasm" restarts 30 < "$(SOURCE_D64)" | tail -2
+
 clean:
-	rm -rf build .build-app .build-web
+	rm -rf build .build-app .build-web .build-web-baseline
 	$(CAPPED) $(BUILD_TIMEOUT) $(SWIFT) package clean

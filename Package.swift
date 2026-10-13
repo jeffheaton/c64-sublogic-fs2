@@ -42,6 +42,12 @@ let package = Package(
                               .unsafeFlags(["-Xlinker", "-z", "-Xlinker", "stack-size=16777216"],
                                            .when(platforms: [.wasi])),
                           ]),
+        // The web build's determinism check and stack probe, native and wasm (`make web-check`).
+        .executableTarget(name: "fs2check", dependencies: ["FS2Host", "FS2Core", "FS2Data", "C64Kit"],
+                          linkerSettings: [
+                              .unsafeFlags(["-Xlinker", "-z", "-Xlinker", "stack-size=16777216"],
+                                           .when(platforms: [.wasi])),
+                          ]),
         // The web deploy's disk image: only what the port reads, scrubbed (`make web-disk`).
         .executableTarget(name: "fs2disk", dependencies: ["FS2Data", "C64Kit"]),
         // Dev-only verification oracle: a 6502 core and C64 bus that run the original code.

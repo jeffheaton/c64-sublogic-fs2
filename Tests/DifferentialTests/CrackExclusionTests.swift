@@ -203,14 +203,28 @@ struct CrackExclusionTests {
           .enabled(if: Original.isModifiedCopy, "needs a modified copy: the check reads its additions from the image"))
     func shippedBinaryNeverNamesTheCrack() throws {
         let names = try Self.crackNames(try #require(Original.data))
+        let baselines = try Self.runtimeBaselines.map { try Data(contentsOf: $0) }
         for url in SubLogicBytesAuditTests.auditedBinaries {
             let raw = try Data(contentsOf: url)
             #expect(raw.count > 100_000, "\(url.path) is a binary")
             // ASCII capitals lowercased, so one search covers every letter case.
             let lowered = Data(raw.map { (0x41...0x5A).contains($0) ? $0 | 0x20 : $0 })
             for needle in names.records + names.words.sorted() {
-                #expect(lowered.range(of: Data(needle.utf8)) == nil, "\(url.lastPathComponent) names the crack")
+                var from = lowered.startIndex
+                while let r = lowered.range(of: Data(needle.utf8), in: from..<lowered.endIndex) {
+                    let context = raw[max(raw.startIndex, r.lowerBound - 32)..<min(raw.endIndex, r.upperBound + 32)]
+                    let runtime = baselines.contains { $0.range(of: context) != nil }
+                    #expect(runtime, "\(url.lastPathComponent) names the crack at file offset \(r.lowerBound)")
+                    from = r.upperBound
+                }
             }
         }
     }
+
+    /// Binaries built from no code of the port with the toolchain of an audited binary that links
+    /// the Swift runtime statically (`FS2_AUDIT_BASELINE`, colon-separated; `make web-audit` passes
+    /// the runtime-only wasm). The standard library's Unicode character-name table holds common
+    /// English words; a match whose 64 surrounding bytes the baseline holds too is the runtime's.
+    static let runtimeBaselines: [URL] = (ProcessInfo.processInfo.environment["FS2_AUDIT_BASELINE"] ?? "")
+        .split(separator: ":").map { URL(fileURLWithPath: String($0)) }
 }
