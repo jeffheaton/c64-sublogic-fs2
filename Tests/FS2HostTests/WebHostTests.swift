@@ -56,6 +56,26 @@ struct WebHostTests {
         #expect(KeyReference.controlSection(style: .web).rows.allSatisfy { $0.mac.hasPrefix("Ctrl+") })
     }
 
+    /// The web reference opens with the flying keys, and each summary row says what the game does:
+    /// its keys type its C64 key, and the flight dispatcher's function for that key's code
+    /// contains the row's words.
+    @Test func flyingKeysComeFirstAndAreRight() throws {
+        let sections = KeyReference.sections(style: .web)
+        #expect(sections.first?.title == KeyReference.SectionTitle.flying)
+        #expect(sections.first?.rows.first?.mac == "T")
+        #expect(KeyReference.flyingSection(style: .web).rows.map(\.mac).contains("Page Up or ;"))
+        for item in KeyReference.flyingKeys {
+            for key in item.keys {
+                let binding = try #require(KeyMapper.binding(forKeyCode: key.rawValue), "\(key) is bound")
+                #expect(binding.c64 == [item.c64], "\(key) types \(binding.c64), not \(item.c64)")
+            }
+            let code = try #require(KeyReference.code(of: item.c64), "\(item.c64) queues a code")
+            let function = try #require(KeyReference.flightFunctions[code], "code \(code) does something in flight")
+            let phrase = item.function.split(separator: " (").first.map(String.init)?.lowercased() ?? ""
+            #expect(function.lowercased().contains(phrase), "\(item.c64): \"\(item.function)\" vs \"\(function)\"")
+        }
+    }
+
     /// The Mac's reference is what it was: the default style is `.mac`.
     @Test func macReferenceIsTheDefault() {
         #expect(KeyReference.sections() == KeyReference.sections(style: .mac))

@@ -39,6 +39,7 @@ public enum KeyReference {
         public static let prompts = "Prompts and menus in the game"
         public static let machine = "Mac shortcuts"
         public static let page = "Page controls"
+        public static let flying = "Flying"
         public static let unmapped = "Not mapped"
     }
 
@@ -213,8 +214,8 @@ public enum KeyReference {
             return [keyboardSection(), controlSection(), keypadSection(), gamepadSection(), promptsSection(),
                     machineSection(), unmappedSection()]
         case .web:
-            return [keyboardSection(style: .web), controlSection(style: .web), keypadSection(style: .web),
-                    promptsSection(), pageSection(), unmappedSection(style: .web)]
+            return [flyingSection(style: .web), keyboardSection(style: .web), controlSection(style: .web),
+                    keypadSection(style: .web), promptsSection(), pageSection(), unmappedSection(style: .web)]
         }
     }
 
@@ -281,6 +282,31 @@ public enum KeyReference {
             Row(mac: "⌥⌘/", c64: "—", function: "Flight Simulator II Help"),
         ])
     }
+
+    /// The keys that fly the airplane, first and short: the yoke (elevator and ailerons), the
+    /// throttle, then centering and the rudder. `flyingKeys` names them; the rows are what the
+    /// flight dispatcher does with their codes (`flightFunctions`, checked in the tests).
+    public static func flyingSection(style: KeyLabelStyle = .mac) -> Section {
+        let rows = flyingKeys.map { item in
+            Row(mac: item.keys.map { $0.label(style) }.joined(separator: " or "), c64: item.c64.label,
+                function: item.function, code: code(of: item.c64))
+        }
+        return Section(title: SectionTitle.flying, rows: rows)
+    }
+
+    /// The flying summary: host keys, the C64 key they type, and what it does in flight.
+    public static let flyingKeys: [(keys: [MacKeyCode], c64: C64Key, function: String)] = [
+        ([.t], .t, "Nose down (elevator)"),
+        ([.b], .b, "Nose up (elevator)"),
+        ([.f], .f, "Bank left (ailerons)"),
+        ([.h], .h, "Bank right (ailerons)"),
+        ([.pageUp, .semicolon], .semicolon, "Throttle up"),
+        ([.pageDown, .quote], .colon, "Throttle down"),
+        ([.slash], .slash, "The next throttle key goes straight to full or idle"),
+        ([.g], .g, "Center the ailerons and rudder"),
+        ([.c], .c, "Rudder left"),
+        ([.m], .m, "Rudder right"),
+    ]
 
     /// The web page's buttons that act on the C64.
     public static func pageSection() -> Section {

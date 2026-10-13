@@ -257,26 +257,39 @@ function configure(config) {
   layout();
 }
 
+/** The reference: the first section (the flying keys) open, every other one under "Every key". */
 function buildReference(sections) {
   const body = $("#reference-body");
   body.replaceChildren();
-  for (const section of sections) {
-    const h = document.createElement("h3");
-    h.textContent = section.title;
-    const table = document.createElement("table");
-    const head = table.createTHead().insertRow();
+  const table = (section) => {
+    const t = document.createElement("table");
+    const head = t.createTHead().insertRow();
     for (const title of ["Key", "Commodore 64", "In Flight Simulator II"]) {
       const th = document.createElement("th");
       th.textContent = title;
       head.appendChild(th);
     }
-    const tbody = table.createTBody();
+    const tbody = t.createTBody();
     for (const row of section.rows) {
       const tr = tbody.insertRow();
       for (const cell of row) tr.insertCell().textContent = cell;
     }
-    body.append(h, table);
-  }
+    return t;
+  };
+  const heading = (section) => {
+    const h = document.createElement("h3");
+    h.textContent = section.title;
+    return h;
+  };
+  const [first, ...rest] = sections;
+  if (first) body.append(heading(first), table(first));
+  if (rest.length === 0) return;
+  const details = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = "Every key";
+  details.append(summary);
+  for (const section of rest) details.append(heading(section), table(section));
+  body.append(details);
 }
 
 // MARK: Keyboard

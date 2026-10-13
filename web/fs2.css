@@ -152,6 +152,9 @@ legend { padding: 0 4px; color: var(--muted); font-size: 13px; }
 fieldset label { display: block; padding: 3px 0; }
 
 #reference-body { max-height: 65vh; overflow: auto; }
+#reference-body > h3:first-child { margin-top: 0; }
+#reference-body details { margin-top: 16px; }
+#reference-body summary { cursor: pointer; color: var(--muted); font-weight: 600; }
 #reference-body table { width: 100%; border-collapse: collapse; font-size: 13px; }
 #reference-body th, #reference-body td { padding: 4px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
 #reference-body th { color: var(--muted); font-weight: 600; }
