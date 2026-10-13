@@ -1,5 +1,6 @@
 import C64Kit
 import FS2Core
+import FS2Host
 import Foundation
 #if Lab
 import FS2LabKit
@@ -9,11 +10,7 @@ import FS2LabKit
 /// `until:` and `text` steps) and by the app's quick boot. Both engines provide them; the native
 /// port has no program counter, so its `pc:` supports the key wait $2250 and the top of the main
 /// loop $204B only.
-protocol EngineDebugging: AnyObject {
-    /// Writes a byte of the 64 KB memory image.
-    func poke(_ address: Int, _ value: UInt8)
-    /// Reads a byte of the 64 KB memory image (between runs).
-    func peek(_ address: Int) -> UInt8
+protocol EngineDebugging: EngineMemoryAccess {
     /// Runs until the program counter reaches `address` (or `maxFrames` frames pass), delivering
     /// frames as usual. Returns true when the address was reached. Throws when the engine cannot
     /// stop at `address`.
@@ -39,11 +36,11 @@ let mainLoopTopAddress: UInt16 = 0x204B
 
 #if Lab
 extension LabEngine: EngineDebugging {
-    func poke(_ address: Int, _ value: UInt8) {
+    public func poke(_ address: Int, _ value: UInt8) {
         machine.bus.ram[address & 0xFFFF] = value
     }
 
-    func peek(_ address: Int) -> UInt8 {
+    public func peek(_ address: Int) -> UInt8 {
         machine.bus.ram[address & 0xFFFF]
     }
 
@@ -94,10 +91,6 @@ struct UnsupportedStop: Error, CustomStringConvertible {
 }
 
 extension NativeEngine: EngineDebugging {
-    func peek(_ address: Int) -> UInt8 {
-        machine.mem[address & 0xFFFF]
-    }
-
     /// `pc:2250` (the key wait): `runToKeyWait`, which stops at the first poll of a key wait that
     /// began after the last key it dispatched (the lab stops at the routine's entry, a few hundred
     /// cycles earlier). `pc:204B` (the top of the main loop): `runToMainLoopTop`, before the pass

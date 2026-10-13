@@ -1,23 +1,23 @@
 import C64Kit
 
 /// A joystick action bound to a Mac key (keypad as joystick).
-struct JoystickBinding: Sendable, Equatable {
+public struct JoystickBinding: Sendable, Equatable {
     /// Control port 1 (the yoke) or 2 (throttle and guns).
-    var port: Int
-    var state: JoystickState
+    public var port: Int
+    public var state: JoystickState
 }
 
 /// One row of the mapping table: a physical Mac key and what it does on the C64.
-struct KeyBinding: Sendable {
-    var mac: MacKeyCode
+public struct KeyBinding: Sendable {
+    public var mac: MacKeyCode
     /// C64 keys held while the Mac key is down (several for a chord, e.g. SHIFT + CRSR for ←).
-    var c64: [C64Key]
+    public var c64: [C64Key]
     /// When set and keypad-as-joystick is on, the key drives a joystick instead of `c64`.
-    var joystick: JoystickBinding?
+    public var joystick: JoystickBinding?
     /// What the C64 side is called in the keyboard reference, when it is not just the key label.
-    var c64Name: String?
+    public var c64Name: String?
 
-    init(_ mac: MacKeyCode, _ c64: [C64Key], joystick: JoystickBinding? = nil, name: String? = nil) {
+    public init(_ mac: MacKeyCode, _ c64: [C64Key], joystick: JoystickBinding? = nil, name: String? = nil) {
         self.mac = mac
         self.c64 = c64
         self.joystick = joystick
@@ -25,7 +25,7 @@ struct KeyBinding: Sendable {
     }
 
     /// Label for the C64 side, e.g. "SHIFT + CRSR →".
-    var c64Label: String {
+    public var c64Label: String {
         if let c64Name { return c64Name }
         return c64.map { $0 == .rightShift && c64.count > 1 ? "SHIFT" : $0.label }.joined(separator: " + ")
     }
@@ -35,14 +35,14 @@ struct KeyBinding: Sendable {
 /// position to C64 matrix positions; the original program's own scan, repeat and dispatch run on
 /// top of the matrix unchanged. Command-key combinations are never mapped, so ⌘-shortcuts reach
 /// the menus.
-enum KeyMapper {
+public enum KeyMapper {
     /// C64 keys deliberately left without a Mac key.
-    static let unmappedByDesign: [C64Key: String] = [
+    public static let unmappedByDesign: [C64Key: String] = [
         .leftShift: "LEFT SHIFT gives the same code as CTRL-A (ADF select), so both Mac Shift keys act as "
             + "RIGHT SHIFT, which the game ignores. The ADF stays on A.",
     ]
 
-    static let bindings: [KeyBinding] = {
+    public static let bindings: [KeyBinding] = {
         var b: [KeyBinding] = []
         // Letters and digits: the same key.
         let letters: [(MacKeyCode, C64Key)] = [
@@ -135,13 +135,13 @@ enum KeyMapper {
     }()
 
     /// The binding for a Mac key code, if the key is mapped.
-    static func binding(forKeyCode code: UInt16) -> KeyBinding? { byCode[code] }
+    public static func binding(forKeyCode code: UInt16) -> KeyBinding? { byCode[code] }
 
     /// Every C64 key some Mac key reaches (directly or as part of a chord).
-    static var reachableC64Keys: Set<C64Key> { Set(bindings.flatMap(\.c64)) }
+    public static var reachableC64Keys: Set<C64Key> { Set(bindings.flatMap(\.c64)) }
 
     /// The Mac keys that produce `key` (alone or in a chord), for the keyboard reference.
-    static func macKeys(for key: C64Key) -> [MacKeyCode] {
+    public static func macKeys(for key: C64Key) -> [MacKeyCode] {
         bindings.filter { $0.c64.contains(key) }.map(\.mac)
     }
 }

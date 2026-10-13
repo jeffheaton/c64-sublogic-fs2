@@ -20,8 +20,8 @@ import C64Kit
 ///
 /// Joysticks pass unchanged. One `commit` per frame end, with the matrix the engine latched for
 /// the next frame; `decide` gives the matrix for the frame after that.
-struct KeyTiming: Sendable, Equatable {
-    static let minimumFrames = 4
+public struct KeyTiming: Sendable, Equatable {
+    public static let minimumFrames = 4
 
     private struct Key: Sendable, Equatable {
         /// In the shaped matrix, and since which frame (the frame it first was or was not).
@@ -35,14 +35,14 @@ struct KeyTiming: Sendable, Equatable {
 
     private var keys = [Key](repeating: Key(), count: 64)
     /// The player's matrix as last observed.
-    private(set) var user = KeyMatrix()
+    public private(set) var user = KeyMatrix()
     /// The frame the last committed matrix is in effect for.
-    private(set) var frame = 0
+    public private(set) var frame = 0
 
     private static let control = C64Key.control.rawValue
 
     /// The player's keys changed: records the new presses.
-    mutating func observe(_ matrix: KeyMatrix) {
+    public mutating func observe(_ matrix: KeyMatrix) {
         let controlHeld = matrix.isPressed(.control)
         if controlHeld && !user.isPressed(.control) {
             // CTRL arriving with keys whose press is still waiting: pressed together.
@@ -58,7 +58,7 @@ struct KeyTiming: Sendable, Equatable {
     }
 
     /// The matrix for the frame after the last committed one.
-    func decide() -> KeyMatrix {
+    public func decide() -> KeyMatrix {
         let n = frame + 1
         let minimum = Self.minimumFrames
         var out = KeyMatrix()
@@ -97,7 +97,7 @@ struct KeyTiming: Sendable, Equatable {
     }
 
     /// The engine latched `matrix` at a frame end: it is in effect for the next frame.
-    mutating func commit(_ matrix: KeyMatrix) {
+    public mutating func commit(_ matrix: KeyMatrix) {
         frame += 1
         for key in C64Key.allCases {
             let i = key.rawValue
@@ -110,7 +110,7 @@ struct KeyTiming: Sendable, Equatable {
     }
 
     /// Forgets the presses still waiting (the restart sequence took the keyboard over).
-    mutating func dropRequests() {
+    public mutating func dropRequests() {
         for i in keys.indices {
             keys[i].requested = false
             if !keys[i].down { keys[i].withControl = false }

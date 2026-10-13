@@ -2,6 +2,7 @@ import C64Kit
 import FS2Core
 import FS2LabKit
 @testable import FS2App
+@testable import FS2Host
 import Foundation
 import Testing
 

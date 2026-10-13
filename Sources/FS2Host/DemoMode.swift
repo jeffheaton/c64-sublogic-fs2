@@ -1,5 +1,20 @@
 import FS2Core
 
+/// An engine's 64 KB memory image, read and written between runs (the menu's demo, the web host).
+/// Both engines provide it; a test double without it never offers the demo.
+public protocol EngineMemoryAccess: AnyObject {
+    /// Reads a byte of the 64 KB memory image (between runs).
+    func peek(_ address: Int) -> UInt8
+    /// Writes a byte of the 64 KB memory image (between runs).
+    func poke(_ address: Int, _ value: UInt8)
+}
+
+extension NativeEngine: EngineMemoryAccess {
+    public func peek(_ address: Int) -> UInt8 {
+        machine.mem[address & 0xFFFF]
+    }
+}
+
 /// Machine ▸ Demo Mode: what answering A (the demo) at the operating-mode prompt does, from the menu.
 ///
 /// The prompt's A does `INC $095B` (from 0 to 1, `modePromptScreen`). The main loop's demo check
@@ -21,24 +36,24 @@ import FS2Core
 ///   once, from regular flight's state. Asking again while the demo runs would reload mode 2 and
 ///   start it over, which the original never does; the menu item stays checked (`running`) until a
 ///   key ends the demo.
-enum DemoMode {
+public enum DemoMode {
     /// `$A7E0`'s word while the flight overlay is resident (its end address).
     static let flightOverlay: UInt16 = 0xA800
     /// `$095A`: the demo is running (any key clears it).
     static let demoActive = 0x095A
 
-    struct Status: Sendable, Equatable {
+    public struct Status: Sendable, Equatable {
         /// The menu item may start the demo now.
-        var available = false
+        public var available = false
         /// The demo runs (`$095A`) or is about to (`$095B`).
-        var running = false
+        public var running = false
 
-        var rawValue: UInt8 { (available ? 1 : 0) | (running ? 2 : 0) }
-        init(available: Bool = false, running: Bool = false) {
+        public var rawValue: UInt8 { (available ? 1 : 0) | (running ? 2 : 0) }
+        public init(available: Bool = false, running: Bool = false) {
             self.available = available
             self.running = running
         }
-        init(rawValue: UInt8) {
+        public init(rawValue: UInt8) {
             available = rawValue & 1 != 0
             running = rawValue & 2 != 0
         }
@@ -55,17 +70,17 @@ enum DemoMode {
 
     /// The demo's state in `engine` (call it on the engine's thread, between runs). An engine
     /// without memory access (a test double) never offers the demo.
-    static func status(of engine: any GameEngine) -> Status {
-        guard let debug = engine as? EngineDebugging else { return Status() }
-        return status(peek: debug.peek)
+    public static func status(of engine: any GameEngine) -> Status {
+        guard let memory = engine as? EngineMemoryAccess else { return Status() }
+        return status(peek: memory.peek)
     }
 
     /// Starts the demo as the prompt's A does: `$095B` = 1, when the state allows it (`status`).
     /// Returns whether it did. Call it on the engine's thread, between runs.
     @discardableResult
-    static func start(on engine: any GameEngine) -> Bool {
-        guard let debug = engine as? EngineDebugging, status(peek: debug.peek).available else { return false }
-        debug.poke(MainLoop.RAM.demoRequest, 1)
+    public static func start(on engine: any GameEngine) -> Bool {
+        guard let memory = engine as? EngineMemoryAccess, status(peek: memory.peek).available else { return false }
+        memory.poke(MainLoop.RAM.demoRequest, 1)
         return true
     }
 }

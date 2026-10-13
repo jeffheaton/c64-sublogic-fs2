@@ -3,6 +3,7 @@ import FS2Core
 import FS2Data
 import FS2LabKit
 @testable import FS2App
+@testable import FS2Host
 import Foundation
 import Testing
 

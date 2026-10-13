@@ -1,6 +1,7 @@
 import C64Kit
 import Carbon.HIToolbox
 @testable import FS2App
+@testable import FS2Host
 import Testing
 
 @Suite struct KeyMapperTests {

@@ -1,4 +1,5 @@
 import C64Kit
+import FS2Host
 
 /// The text of Help ▸ Flight Simulator II Help: a short guide to the game and the Mac app. Key
 /// names that differ between the Mac and the C64 come from `KeyMapper` (through

@@ -1,5 +1,6 @@
 import FS2Core
 @testable import FS2App
+@testable import FS2Host
 import Testing
 
 /// The engine thread's wall-clock pacing, on a simulated clock.

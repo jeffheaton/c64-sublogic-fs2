@@ -1,4 +1,5 @@
 import AVFoundation
+import FS2Host
 import Foundation
 
 /// The SID sound through AVAudioEngine: an `AVAudioSourceNode` pulls mono samples from a

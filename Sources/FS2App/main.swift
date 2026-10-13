@@ -1,4 +1,5 @@
 import AppKit
+import FS2Host
 import Foundation
 
 /// Entry point. `--headless` runs a session without any window (see `HeadlessCommand`);

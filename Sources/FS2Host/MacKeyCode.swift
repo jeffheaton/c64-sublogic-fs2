@@ -1,7 +1,7 @@
 /// Mac virtual key codes (`NSEvent.keyCode`), with the values of Carbon's `kVK_*` constants
 /// (HIToolbox/Events.h). They name physical key positions on an ANSI keyboard, independent of the
 /// active keyboard layout, which is what a positional C64 mapping needs.
-enum MacKeyCode: UInt16, CaseIterable, Sendable {
+public enum MacKeyCode: UInt16, CaseIterable, Sendable {
     case a = 0x00, s = 0x01, d = 0x02, f = 0x03, h = 0x04, g = 0x05, z = 0x06, x = 0x07
     case c = 0x08, v = 0x09, isoSection = 0x0A, b = 0x0B, q = 0x0C, w = 0x0D, e = 0x0E, r = 0x0F
     case y = 0x10, t = 0x11, digit1 = 0x12, digit2 = 0x13, digit3 = 0x14, digit4 = 0x15, digit6 = 0x16
@@ -22,7 +22,7 @@ enum MacKeyCode: UInt16, CaseIterable, Sendable {
     case leftArrow = 0x7B, rightArrow = 0x7C, downArrow = 0x7D, upArrow = 0x7E
 
     /// True for the modifier keys, which arrive as `flagsChanged` events instead of key down/up.
-    var isModifier: Bool {
+    public var isModifier: Bool {
         switch self {
         case .command, .rightCommand, .shift, .rightShift, .capsLock, .option, .rightOption, .control,
              .rightControl, .function:
@@ -34,7 +34,7 @@ enum MacKeyCode: UInt16, CaseIterable, Sendable {
 
     /// The bit for this key in the device-dependent part of `NSEvent.modifierFlags` (IOKit's
     /// `NX_DEVICE*KEYMASK`), which tells the left and right modifier keys apart.
-    var deviceModifierMask: UInt? {
+    public var deviceModifierMask: UInt? {
         switch self {
         case .control: return 0x0000_0001
         case .shift: return 0x0000_0002
@@ -49,7 +49,7 @@ enum MacKeyCode: UInt16, CaseIterable, Sendable {
     }
 
     /// The device-independent modifier flag (`NSEvent.ModifierFlags` raw value) for this key.
-    var modifierFlag: UInt? {
+    public var modifierFlag: UInt? {
         switch self {
         case .capsLock: return 1 << 16
         case .shift, .rightShift: return 1 << 17
@@ -63,7 +63,7 @@ enum MacKeyCode: UInt16, CaseIterable, Sendable {
 
     /// Whether a `flagsChanged` event for this key means it is now down. Uses the left/right
     /// device bits when the event carries them and the shared modifier flag otherwise.
-    func isDown(modifierFlags raw: UInt) -> Bool {
+    public func isDown(modifierFlags raw: UInt) -> Bool {
         let deviceBits: UInt = 0x0000_207F
         if let mask = deviceModifierMask, raw & deviceBits != 0 { return raw & mask != 0 }
         if let flag = modifierFlag { return raw & flag != 0 }
@@ -71,7 +71,7 @@ enum MacKeyCode: UInt16, CaseIterable, Sendable {
     }
 
     /// Short label printed on the Mac key, for the keyboard reference.
-    var label: String {
+    public var label: String {
         switch self {
         case .a, .b, .c, .d, .e, .f, .g, .h, .i, .j, .k, .l, .m, .n, .o, .p, .q, .r, .s, .t, .u, .v, .w,
              .x, .y, .z:

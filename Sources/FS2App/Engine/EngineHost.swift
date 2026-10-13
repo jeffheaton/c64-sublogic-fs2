@@ -1,5 +1,6 @@
 import C64Kit
 import FS2Core
+import FS2Host
 import Foundation
 import Synchronization
 
@@ -36,6 +37,19 @@ final class EngineHost: Sendable {
         /// Machine ▸ Demo Mode (`DemoMode.start`).
         var demo = false
         var options = EngineOptions()
+
+        /// What the session step takes from the mailbox.
+        var requests: HostRequests {
+            var r = HostRequests()
+            r.input = input
+            r.pressedSinceRead = pressedSinceRead
+            r.inputChanged = inputChanged
+            r.paused = paused
+            r.restart = restart
+            r.demo = demo
+            r.options = options
+            return r
+        }
     }
 
     private let mailbox = Mutex(Mailbox())
@@ -120,9 +134,9 @@ final class EngineHost: Sendable {
 
     private func threadMain() {
         defer { finished.signal() }
-        guard var loop = makeLoop() else { return }
-        var pacer = FramePacer(now: DispatchTime.now().uptimeNanoseconds, cycles: loop.engine.cycles)
-        var wasPaused = false
+        guard let loop = makeLoop() else { return }
+        let now = { DispatchTime.now().uptimeNanoseconds }
+        var session = EngineSession(loop: loop, audio: audio, now: now())
 
         while true {
             let m = mailbox.withLock { m -> Mailbox in
@@ -134,44 +148,23 @@ final class EngineHost: Sendable {
             if m.stop { return }
             if m.reset {
                 guard let fresh = makeLoop() else { return }
-                loop = fresh
-                pacer.rebase(now: DispatchTime.now().uptimeNanoseconds, cycles: loop.engine.cycles)
+                session.replace(loop: fresh, now: now())
             }
-            if m.inputChanged || m.reset {
-                // Keys pressed since the last read but already let go: show the key timing the
-                // press first, so the tap is held for its minimum frames instead of being lost.
-                var taps = m.input
-                for key in C64Key.allCases where m.pressedSinceRead.isPressed(key) { taps.keys.set(key, pressed: true) }
-                if taps != m.input { loop.setUserInput(taps) }
-                loop.setUserInput(m.input)
-            }
-            if loop.engine.options != m.options { loop.engine.options = m.options }
-            if m.restart { loop.sequencer.start() }
-            if m.demo { DemoMode.start(on: loop.engine) }
-            demo.store(DemoMode.status(of: loop.engine).rawValue, ordering: .releasing)
-            if m.paused {
-                wasPaused = true
+            let (status, action) = session.step(m.requests, fresh: m.reset, now: now)
+            demo.store(status.rawValue, ordering: .releasing)
+            switch action {
+            case .paused:
                 _ = wake.wait(timeout: .now() + .milliseconds(250))
-                continue
-            }
-            if wasPaused {
-                wasPaused = false
-                pacer.rebase(now: DispatchTime.now().uptimeNanoseconds, cycles: loop.engine.cycles)
-            }
-
-            let cycles = loop.engine.cycles
-            switch pacer.next(now: DispatchTime.now().uptimeNanoseconds, cycles: cycles) {
-            case .run(let boundary):
-                loop.engine.run(untilCycle: boundary)
-                audio?.mark(loop.engine.cycles)
-                if loop.engine.cycles == cycles {
-                    let reason = (loop.engine as? NativeEngine)?.endReason.map { " (\($0))" } ?? ""
-                    onError("The engine stopped at cycle \(cycles)\(reason).")
-                    mailbox.withLock { $0.paused = true }
-                }
             case .sleep(let nanoseconds):
                 // Until the next frame is due (or a control wakes the thread).
                 _ = wake.wait(timeout: .now() + .nanoseconds(Int(clamping: nanoseconds)))
+            case .run(let boundary):
+                let cycles = session.loop.engine.cycles
+                session.loop.engine.run(untilCycle: boundary)
+                if let error = session.ran(from: cycles) {
+                    onError(error)
+                    mailbox.withLock { $0.paused = true }
+                }
             }
         }
     }
@@ -196,116 +189,12 @@ final class EngineHost: Sendable {
     }
 }
 
-/// Engine-thread state: the engine, the latest user input, its key timing and the restart
-/// sequence. Internal (not private) so tests can drive a real engine through it without the
-/// wall-clock thread.
-///
-/// The player's keys go through `KeyTiming` (minimum hold and release, CTRL before the key it
-/// modifies). The engine latches `engine.input` at each frame end, so every `onFrame` commits the
-/// matrix just latched and decides the one for the frame after.
-final class EngineLoop {
-    let engine: any GameEngine
-    var userInput = InputState()
-    var sequencer = RestartSequencer()
-    private(set) var keyTiming = KeyTiming()
-
-    init(engine: any GameEngine, frames: FrameExchange, audio: AudioFeed?) {
-        self.engine = engine
-        engine.onFrame = { [unowned self] frame in
+extension EngineLoop {
+    /// The Mac app's loop: every frame to the display, its SID writes to the audio.
+    convenience init(engine: any GameEngine, frames: FrameExchange, audio: AudioFeed?) {
+        self.init(engine: engine, publish: { frame in
             frames.publish(frame)
             audio?.push(writes: frame.sidWrites)
-            self.frameEnded()
-        }
-        engine.input = shapedUserInput()
-    }
-
-    /// A frame ended: the engine latched `engine.input` for the next frame. Sets the input for
-    /// the frame after (the engine applies it at the next frame boundary).
-    private func frameEnded() {
-        keyTiming.commit(engine.input.keys)
-        let pendingRestore = engine.input.restore
-        let next: InputState
-        if sequencer.isActive {
-            next = sequencer.next(user: userInput)
-            keyTiming.dropRequests()
-        } else {
-            next = shapedUserInput()
-        }
-        engine.input = next
-        if pendingRestore { engine.input.restore = true }
-    }
-
-    /// New input from the UI. Unless a restart sequence owns the keys, it goes to the engine right
-    /// away (applied at the next frame boundary), shaped by the key timing.
-    func setUserInput(_ input: InputState) {
-        userInput = input
-        keyTiming.observe(input.keys)
-        guard !sequencer.isActive else { return }
-        let pendingRestore = engine.input.restore
-        engine.input = shapedUserInput()
-        if pendingRestore { engine.input.restore = true }
-    }
-
-    /// The player's input with the keys shaped for the next undecided frame.
-    private func shapedUserInput() -> InputState {
-        var input = userInput
-        input.keys = keyTiming.decide()
-        return input
-    }
-}
-
-/// Wall-clock pacing for the engine thread: where the engine should be at a given moment, at the
-/// NTSC rate, in whole frames.
-///
-/// The engine runs one frame whenever the wall clock has passed the next frame boundary, and the
-/// thread sleeps otherwise. When the engine falls more than `maxBacklog` behind (a stall, the
-/// machine sleeping, a debugger, an engine slower than real time), the rest of the debt is
-/// forgiven: the engine catches up at most `maxBacklog` and, while it stays behind, keeps running
-/// flat out instead of sleeping, so it never spirals and never wastes time.
-struct FramePacer: Sendable, Equatable {
-    enum Action: Sendable, Equatable {
-        /// Run the engine until this cycle (the next frame boundary).
-        case run(untilCycle: UInt64)
-        /// Nothing is due yet: sleep this long.
-        case sleep(nanoseconds: UInt64)
-    }
-
-    static let clockHz = VirtualClock.hz
-    static let cyclesPerFrame = VirtualClock.cyclesPerFrame
-    /// Most the engine may fall behind the wall clock before the rest is dropped (about 0.1 s).
-    static let maxBacklog: UInt64 = 6 * VirtualClock.cyclesPerFrame
-
-    /// The engine's cycle count at `baseTime` (nanoseconds of uptime).
-    private(set) var baseCycle: UInt64
-    private(set) var baseTime: UInt64
-
-    init(now: UInt64, cycles: UInt64) {
-        baseTime = now
-        baseCycle = cycles
-    }
-
-    /// Starts pacing afresh from `cycles` at `now` (after a pause or a new engine): no backlog.
-    mutating func rebase(now: UInt64, cycles: UInt64) {
-        baseTime = now
-        baseCycle = cycles
-    }
-
-    /// The cycle the wall clock says the engine should have reached at `now`.
-    func target(now: UInt64) -> UInt64 {
-        baseCycle &+ UInt64(Double(now &- baseTime) * Self.clockHz / 1e9)
-    }
-
-    /// What to do next, for an engine at `cycles` at time `now`.
-    mutating func next(now: UInt64, cycles: UInt64) -> Action {
-        var target = target(now: now)
-        if target > cycles &+ Self.maxBacklog {
-            baseCycle = cycles &+ Self.maxBacklog
-            baseTime = now
-            target = baseCycle
-        }
-        let nextBoundary = (cycles / Self.cyclesPerFrame + 1) * Self.cyclesPerFrame
-        if target >= nextBoundary { return .run(untilCycle: nextBoundary) }
-        let nanoseconds = (Double(nextBoundary - target) / Self.clockHz * 1e9).rounded(.up)
-        return .sleep(nanoseconds: max(1, UInt64(nanoseconds)))
+        })
     }
 }

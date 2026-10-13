@@ -3,8 +3,8 @@ import FS2Core
 import Synchronization
 
 /// What the engine thread sends the audio thread, in order.
-struct AudioEvent: BitwiseCopyable, Sendable, Equatable {
-    enum Kind: UInt8 {
+public struct AudioEvent: BitwiseCopyable, Sendable, Equatable {
+    public enum Kind: UInt8 {
         /// A SID register write at `cycle`.
         case write
         /// The engine has run up to `cycle` (sent after every slice; paces the audio).
@@ -13,37 +13,37 @@ struct AudioEvent: BitwiseCopyable, Sendable, Equatable {
         case reset
     }
 
-    var cycle: UInt64
-    var kindRaw: UInt8
-    var reg: UInt8
-    var value: UInt8
+    public var cycle: UInt64
+    public var kindRaw: UInt8
+    public var reg: UInt8
+    public var value: UInt8
 
-    var kind: Kind { Kind(rawValue: kindRaw) ?? .mark }
+    public var kind: Kind { Kind(rawValue: kindRaw) ?? .mark }
 
-    static func write(_ cycle: UInt64, _ reg: UInt8, _ value: UInt8) -> AudioEvent {
+    public static func write(_ cycle: UInt64, _ reg: UInt8, _ value: UInt8) -> AudioEvent {
         AudioEvent(cycle: cycle, kindRaw: Kind.write.rawValue, reg: reg, value: value)
     }
-    static func mark(_ cycle: UInt64) -> AudioEvent { AudioEvent(cycle: cycle, kindRaw: Kind.mark.rawValue, reg: 0, value: 0) }
-    static func reset(_ cycle: UInt64) -> AudioEvent { AudioEvent(cycle: cycle, kindRaw: Kind.reset.rawValue, reg: 0, value: 0) }
+    public static func mark(_ cycle: UInt64) -> AudioEvent { AudioEvent(cycle: cycle, kindRaw: Kind.mark.rawValue, reg: 0, value: 0) }
+    public static func reset(_ cycle: UInt64) -> AudioEvent { AudioEvent(cycle: cycle, kindRaw: Kind.reset.rawValue, reg: 0, value: 0) }
 }
 
 /// The engine thread's end of the audio path. Writes are dropped while no audio output is running
 /// (so the ring never fills up with nobody reading it).
-final class AudioFeed: Sendable {
-    let ring = SPSCRing<AudioEvent>(capacity: 16384)
+public final class AudioFeed: Sendable {
+    public let ring = SPSCRing<AudioEvent>(capacity: 16384)
     /// Set by the audio output while its render callback is live.
-    let active = Atomic<Bool>(false)
+    public let active = Atomic<Bool>(false)
     /// Events that did not fit (diagnostics).
-    let dropped = Atomic<Int>(0)
+    public let dropped = Atomic<Int>(0)
 
-    init() {}
+    public init() {}
 
     /// A batch larger than this is a burst (e.g. the writes of a quick boot, delivered with one
     /// frame) that the audio side will jump over anyway; only each register's last write is kept.
-    static let burstLimit = 2048
+    public static let burstLimit = 2048
 
     /// Engine thread: forwards a frame's SID writes.
-    func push(writes: [(cycle: UInt64, reg: UInt8, value: UInt8)]) {
+    public func push(writes: [(cycle: UInt64, reg: UInt8, value: UInt8)]) {
         guard active.load(ordering: .relaxed) else { return }
         if writes.count > Self.burstLimit {
             var last = [Int](repeating: -1, count: 0x20)
@@ -60,13 +60,13 @@ final class AudioFeed: Sendable {
     }
 
     /// Engine thread: the engine has run up to `cycle`.
-    func mark(_ cycle: UInt64) {
+    public func mark(_ cycle: UInt64) {
         guard active.load(ordering: .relaxed) else { return }
         if !ring.push(.mark(cycle)) { dropped.add(1, ordering: .relaxed) }
     }
 
     /// Engine thread: a new engine (cold reset) starts at `cycle`.
-    func reset(_ cycle: UInt64) {
+    public func reset(_ cycle: UInt64) {
         guard active.load(ordering: .relaxed) else { return }
         if !ring.push(.reset(cycle)) { dropped.add(1, ordering: .relaxed) }
     }
@@ -81,14 +81,14 @@ final class AudioFeed: Sendable {
 /// without a click, and a big jump (boot warp, stall, pause) is never rendered through.
 ///
 /// `SIDModel`/`SIDStream` are not thread-safe: after `init` only the audio thread touches them.
-final class SIDRenderer: @unchecked Sendable {
-    static let latency: UInt64 = 2 * VirtualClock.cyclesPerFrame
-    static let resyncThreshold: UInt64 = 2 * VirtualClock.cyclesPerFrame
-    static let streamCapacity = 4096
+public final class SIDRenderer: @unchecked Sendable {
+    public static let latency: UInt64 = 2 * VirtualClock.cyclesPerFrame
+    public static let resyncThreshold: UInt64 = 2 * VirtualClock.cyclesPerFrame
+    public static let streamCapacity = 4096
 
-    let sampleRate: Double
-    let feed: AudioFeed
-    let muted = Atomic<Bool>(false)
+    public let sampleRate: Double
+    public let feed: AudioFeed
+    public let muted = Atomic<Bool>(false)
     private let volumeBits = Atomic<UInt32>(Float(0.8).bitPattern)
 
     private let sid: SIDModel
@@ -99,7 +99,7 @@ final class SIDRenderer: @unchecked Sendable {
     /// Last value written to each register (to rebuild the chip after an output device change).
     private let shadow = UnsafeMutablePointer<UInt8>.allocate(capacity: 0x20)
 
-    init(sampleRate: Double, feed: AudioFeed, restoring registers: [UInt8]? = nil) {
+    public init(sampleRate: Double, feed: AudioFeed, restoring registers: [UInt8]? = nil) {
         self.sampleRate = sampleRate
         self.feed = feed
         sid = SIDModel(clockHz: SIDModel.ntscClockHz, sampleRate: sampleRate)
@@ -115,19 +115,19 @@ final class SIDRenderer: @unchecked Sendable {
 
     deinit { shadow.deallocate() }
 
-    var volume: Float {
+    public var volume: Float {
         get { Float(bitPattern: volumeBits.load(ordering: .relaxed)) }
         set { volumeBits.store(max(0, min(1, newValue)).bitPattern, ordering: .relaxed) }
     }
 
     /// Register values as last written (call only when the audio thread is stopped).
-    var registers: [UInt8] { Array(UnsafeBufferPointer(start: shadow, count: 0x19)) }
+    public var registers: [UInt8] { Array(UnsafeBufferPointer(start: shadow, count: 0x19)) }
 
     /// The chip's cycle (for tests; audio thread only).
-    var chipCycle: UInt64 { sid.cycle }
+    public var chipCycle: UInt64 { sid.cycle }
 
     /// Audio thread: fills `out` with `count` mono samples.
-    func render(into out: UnsafeMutablePointer<Float>, count: Int) {
+    public func render(into out: UnsafeMutablePointer<Float>, count: Int) {
         drain()
         guard started, !muted.load(ordering: .relaxed) else {
             out.update(repeating: 0, count: count)

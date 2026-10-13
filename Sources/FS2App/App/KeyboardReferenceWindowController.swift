@@ -1,4 +1,5 @@
 import AppKit
+import FS2Host
 
 /// Machine ▸ Keyboard Reference (⌘/): the Mac ↔ C64 key table with what each key does in the game,
 /// generated from the same mapping the keyboard uses (`KeyReference`).

@@ -1,5 +1,6 @@
 import C64Kit
 import FS2Core
+import FS2Host
 import Foundation
 
 /// Plays a lab-format session (re/sessions/*.txt) against any `GameEngine`, as fast as it runs:

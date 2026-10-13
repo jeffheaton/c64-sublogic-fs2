@@ -3,6 +3,7 @@ import Darwin
 import FS2Core
 import FS2Data
 @testable import FS2App
+@testable import FS2Host
 import FS2LabKit
 import Foundation
 import Testing

@@ -10,15 +10,15 @@ import C64Kit
 /// the code picks a handler (the dispatch table $2718); the editor reads the same codes. The
 /// codes and functions here are the documented ones; `KeyReferenceDiskTests` checks them against the
 /// tables on the user's disk.
-enum KeyReference {
-    struct Row: Sendable, Equatable {
-        var mac: String
-        var c64: String
-        var function: String
+public enum KeyReference {
+    public struct Row: Sendable, Equatable {
+        public var mac: String
+        public var c64: String
+        public var function: String
         /// The command code the row's keys queue, for keyboard and Control rows (not displayed).
-        var code: UInt8?
+        public var code: UInt8?
 
-        init(mac: String, c64: String, function: String, code: UInt8? = nil) {
+        public init(mac: String, c64: String, function: String, code: UInt8? = nil) {
             self.mac = mac
             self.c64 = c64
             self.function = function
@@ -26,19 +26,20 @@ enum KeyReference {
         }
     }
 
-    struct Section: Sendable, Equatable {
-        var title: String
-        var rows: [Row]
+    public struct Section: Sendable, Equatable {
+        public var title: String
+        public var rows: [Row]
     }
 
-    enum SectionTitle {
-        static let keyboard = "Keyboard"
-        static let control = "Control combinations"
-        static let keypad = "Keypad as joystick (Settings)"
-        static let gamepad = "Game controller"
-        static let prompts = "Prompts and menus in the game"
-        static let machine = "Mac shortcuts"
-        static let unmapped = "Not mapped"
+    public enum SectionTitle {
+        public static let keyboard = "Keyboard"
+        public static let control = "Control combinations"
+        public static let keypad = "Keypad as joystick (Settings)"
+        public static let gamepad = "Game controller"
+        public static let prompts = "Prompts and menus in the game"
+        public static let machine = "Mac shortcuts"
+        public static let page = "Page controls"
+        public static let unmapped = "Not mapped"
     }
 
     // MARK: The original's command codes
@@ -47,7 +48,7 @@ enum KeyReference {
     /// command code"): letters and digits their ASCII code, the punctuation and editing keys the
     /// codes below. nil stands for a code of $80 or more, which is never queued: the F-keys, the
     /// cursor keys, @ £ * =, RIGHT SHIFT, C= and CTRL itself (its code only marks CTRL as held).
-    static func code(of key: C64Key) -> UInt8? {
+    public static func code(of key: C64Key) -> UInt8? {
         switch key {
         case .instDel, .colon, .leftArrow: return 0x08
         case .returnKey: return 0x0D
@@ -75,7 +76,7 @@ enum KeyReference {
     /// The code queued for `key` pressed while CTRL is held: its code − $40 (`requeueKey` $24EB),
     /// nil when the dispatcher drops the result. Codes below $40 wrap to $C0 and up, so CTRL with
     /// a digit, SPACE or punctuation does nothing; letters give the CTRL codes $01-$1A.
-    static func controlCode(of key: C64Key) -> UInt8? {
+    public static func controlCode(of key: C64Key) -> UInt8? {
         guard let c = code(of: key), c >= 0x40 else { return nil }
         let result = c - 0x40
         return result < 0x60 ? result : nil
@@ -83,7 +84,7 @@ enum KeyReference {
 
     /// What each command code does in flight: the handlers of the dispatch table $2718
     /// (input.md, "Command map"). Every other code $00-$5F goes to an RTS and does nothing.
-    static let flightFunctions: [UInt8: String] = {
+    public static let flightFunctions: [UInt8: String] = {
         let adf = "ADF: select the first frequency digit; quick repeats select the next digits, then the fuel tank"
         let editor = "Open the editor (the mode settings screens)"
         let pause = "Pause (the next key resumes)"
@@ -145,7 +146,7 @@ enum KeyReference {
     }()
 
     /// What the editor (E or CLR/HOME) does with a code (editor.md, "Keys"). It ignores the rest.
-    static let editorFunctions: [UInt8: String] = {
+    public static let editorFunctions: [UInt8: String] = {
         var f: [UInt8: String] = [
             0x0D: "next line (accepts the number typed)",
             0x2D: "previous line",
@@ -161,7 +162,7 @@ enum KeyReference {
     }()
 
     /// What a command code does, in flight and in the editor.
-    static func describe(code: UInt8?) -> String {
+    public static func describe(code: UInt8?) -> String {
         guard let code else { return noFunction }
         var parts: [String] = []
         if let f = flightFunctions[code] { parts.append(f) }
@@ -169,10 +170,10 @@ enum KeyReference {
         return parts.isEmpty ? noFunction : parts.joined(separator: ". ")
     }
 
-    static let noFunction = "No function in the game"
+    public static let noFunction = "No function in the game"
 
     /// What a C64 key does on its own.
-    static func function(of key: C64Key) -> String {
+    public static func function(of key: C64Key) -> String {
         switch key {
         case .control: return "Hold for the Control combinations below (the C64's CTRL commands)"
         case .rightShift: return "Nothing (the game ignores it)"
@@ -183,47 +184,57 @@ enum KeyReference {
 
     /// The C64 key a binding stands for when RIGHT SHIFT (which queues nothing) is left out of its
     /// chord: SHIFT + INST/DEL is INST/DEL to the game. nil for a chord of two live keys.
-    static func effectiveKey(of binding: KeyBinding) -> C64Key? {
+    public static func effectiveKey(of binding: KeyBinding) -> C64Key? {
         let keys = binding.c64.filter { $0 != .rightShift }
         if keys.isEmpty { return binding.c64.first }
         return keys.count == 1 ? keys[0] : nil
     }
 
     /// The Mac key that types `key` on its own (not a chord, not the keypad), for running text.
-    static func macName(for key: C64Key) -> String {
+    public static func macName(for key: C64Key) -> String { keyName(for: key, style: .mac) }
+
+    /// The host key that types `key` on its own (not a chord, not the keypad), for running text.
+    public static func keyName(for key: C64Key, style: KeyLabelStyle) -> String {
         let binding = KeyMapper.bindings.first { $0.c64 == [key] && !$0.mac.label.hasPrefix("Keypad") }
             ?? KeyMapper.bindings.first { $0.c64 == [key] }
-        guard let label = binding?.mac.label else { return key.label }
+        guard let label = binding?.mac.label(style) else { return key.label }
         // "Home (fn ←)" → "Home".
-        if let paren = label.range(of: " (") { return String(label[..<paren.lowerBound]) }
+        if let paren = label.firstRange(of: " (") { return String(label[..<paren.lowerBound]) }
         return label
     }
 
     // MARK: Sections
 
-    /// All sections, in display order.
-    static func sections() -> [Section] {
-        [keyboardSection(), controlSection(), keypadSection(), gamepadSection(), promptsSection(),
-         machineSection(), unmappedSection()]
+    /// All sections, in display order. The web build has no game controller support yet, and
+    /// its machine controls are the page's buttons.
+    public static func sections(style: KeyLabelStyle = .mac) -> [Section] {
+        switch style {
+        case .mac:
+            return [keyboardSection(), controlSection(), keypadSection(), gamepadSection(), promptsSection(),
+                    machineSection(), unmappedSection()]
+        case .web:
+            return [keyboardSection(style: .web), controlSection(style: .web), keypadSection(style: .web),
+                    promptsSection(), pageSection(), unmappedSection(style: .web)]
+        }
     }
 
     /// One row per key binding that is not a keypad joystick, in `KeyMapper.bindings` order.
-    static func keyboardSection() -> Section {
+    public static func keyboardSection(style: KeyLabelStyle = .mac) -> Section {
         let rows = KeyMapper.bindings.filter { $0.joystick == nil }.map { b -> Row in
             let key = effectiveKey(of: b)
             let code = key.flatMap(code(of:))
-            return Row(mac: b.mac.label, c64: b.c64Label, function: key.map(function(of:)) ?? noFunction, code: code)
+            return Row(mac: b.mac.label(style), c64: b.c64Label, function: key.map(function(of:)) ?? noFunction, code: code)
         }
         return Section(title: SectionTitle.keyboard, rows: rows)
     }
 
     /// One row per Mac key that, with Control held, queues a code the game uses. Sorted by code.
-    static func controlSection() -> Section {
+    public static func controlSection(style: KeyLabelStyle = .mac) -> Section {
         var rows: [Row] = []
         for b in KeyMapper.bindings where b.joystick == nil {
             guard let key = effectiveKey(of: b), let code = controlCode(of: key),
                   flightFunctions[code] != nil || editorFunctions[code] != nil else { continue }
-            rows.append(Row(mac: "Control-" + b.mac.label, c64: "CTRL + " + key.label,
+            rows.append(Row(mac: (style == .web ? "Ctrl+" : "Control-") + b.mac.label(style), c64: "CTRL + " + key.label,
                             function: describe(code: code), code: code))
         }
         rows.sort { ($0.code ?? 0, $0.mac) < ($1.code ?? 0, $1.mac) }
@@ -231,17 +242,17 @@ enum KeyReference {
     }
 
     /// The keypad bindings that drive a joystick when keypad-as-joystick is on.
-    static func keypadSection() -> Section {
+    public static func keypadSection(style: KeyLabelStyle = .mac) -> Section {
         let rows = KeyMapper.bindings.compactMap { b -> Row? in
             guard let j = b.joystick else { return nil }
-            return Row(mac: b.mac.label, c64: joystickLabel(j),
+            return Row(mac: b.mac.label(style), c64: joystickLabel(j),
                        function: joystickFunction(j) + " (keypad-as-joystick off: \(b.c64Label))")
         }
         return Section(title: SectionTitle.keypad, rows: rows)
     }
 
     /// Game controllers (`Gamepad`).
-    static func gamepadSection() -> Section {
+    public static func gamepadSection() -> Section {
         Section(title: SectionTitle.gamepad, rows: [
             Row(mac: "Left stick or D-pad", c64: "Joystick 1", function: "The yoke: nose down/up (like T/B), bank left/right (like F/H)"),
             Row(mac: "A button", c64: "Joystick 1 fire", function: "View select (like 5)"),
@@ -251,7 +262,7 @@ enum KeyReference {
     }
 
     /// The original's own prompts and menus (`waitForKey` users other than the editor).
-    static func promptsSection() -> Section {
+    public static func promptsSection() -> Section {
         Section(title: SectionTitle.prompts, rows: [
             Row(mac: "A / B", c64: "A / B", function: "Title, WHAT DISPLAY ARE YOU USING?: A color, B black and white"),
             Row(mac: "A / B", c64: "A / B", function: "SELECT OPERATING MODE: A the demo (any key takes over), B regular flight"),
@@ -261,7 +272,7 @@ enum KeyReference {
     }
 
     /// The Machine menu items that act on the C64.
-    static func machineSection() -> Section {
+    public static func machineSection() -> Section {
         Section(title: SectionTitle.machine, rows: [
             Row(mac: "⌘P", c64: "—", function: "Pause or resume the whole machine, sound included (Machine ▸ Pause)"),
             Row(mac: "⌘R", c64: "RUN/STOP + RESTORE", function: "Restart the program: back to the title after the reload (Machine ▸ Restart)"),
@@ -271,16 +282,29 @@ enum KeyReference {
         ])
     }
 
-    static func unmappedSection() -> Section {
+    /// The web page's buttons that act on the C64.
+    public static func pageSection() -> Section {
+        Section(title: SectionTitle.page, rows: [
+            Row(mac: "Pause", c64: "—", function: "Pause or resume the whole machine, sound included"),
+            Row(mac: "Restart", c64: "RUN/STOP + RESTORE", function: "Restart the program: back to the title after the reload"),
+            Row(mac: "Reset", c64: "Power off and on", function: "Cold start without the disk loading wait"),
+            Row(mac: "Demo", c64: "—", function: "Start the demo, as the operating-mode prompt's A (while flying)"),
+            Row(mac: "Keys", c64: "—", function: "This keyboard reference"),
+        ])
+    }
+
+    public static func unmappedSection(style: KeyLabelStyle = .mac) -> Section {
         let rows = KeyMapper.unmappedByDesign.keys.sorted { $0.rawValue < $1.rawValue }.map { key in
-            Row(mac: "(none)", c64: key.label, function: KeyMapper.unmappedByDesign[key] ?? "", code: code(of: key))
+            var text = KeyMapper.unmappedByDesign[key] ?? ""
+            if style == .web { text = text.replacing("Mac Shift keys", with: "Shift keys") }
+            return Row(mac: "(none)", c64: key.label, function: text, code: code(of: key))
         }
         return Section(title: SectionTitle.unmapped, rows: rows)
     }
 
     // MARK: Joysticks
 
-    static func joystickLabel(_ j: JoystickBinding) -> String {
+    public static func joystickLabel(_ j: JoystickBinding) -> String {
         var parts: [String] = []
         if j.state.contains(.up) { parts.append("up") }
         if j.state.contains(.down) { parts.append("down") }
@@ -291,7 +315,7 @@ enum KeyReference {
     }
 
     /// What the original's joystick routine ($2688) does with the bits (input.md, "Joysticks").
-    static func joystickFunction(_ j: JoystickBinding) -> String {
+    public static func joystickFunction(_ j: JoystickBinding) -> String {
         if j.port == 2 {
             if j.state.contains(.fire) { return "Guns (Europe 1917)" }
             return j.state.contains(.up) ? "Throttle up" : "Throttle down"
@@ -309,20 +333,21 @@ enum KeyReference {
     // MARK: Text forms
 
     /// The reference as plain text (tab separated), for copying.
-    static func plainText() -> String {
-        sections().map { s in
+    public static func plainText(style: KeyLabelStyle = .mac) -> String {
+        sections(style: style).map { s in
             ([s.title] + s.rows.map { "\($0.mac)\t\($0.c64)\t\($0.function)" }).joined(separator: "\n")
         }.joined(separator: "\n\n")
     }
 
-    static let markdownBegin = "<!-- BEGIN KEYBOARD REFERENCE: generated by `FS2 --key-reference`; do not edit by hand -->"
-    static let markdownEnd = "<!-- END KEYBOARD REFERENCE -->"
+    public static let markdownBegin = "<!-- BEGIN KEYBOARD REFERENCE: generated by `FS2 --key-reference`; do not edit by hand -->"
+    public static let markdownEnd = "<!-- END KEYBOARD REFERENCE -->"
 
     /// The controls tables of README.md (between the markers), as `FS2 --key-reference` prints them.
-    static func markdown() -> String {
+    public static func markdown(style: KeyLabelStyle = .mac) -> String {
         var lines = [markdownBegin]
-        for s in sections() {
-            lines += ["", "### " + s.title, "", "| Mac | Commodore 64 | In Flight Simulator II |", "|---|---|---|"]
+        let host = style == .web ? "Key" : "Mac"
+        for s in sections(style: style) {
+            lines += ["", "### " + s.title, "", "| \(host) | Commodore 64 | In Flight Simulator II |", "|---|---|---|"]
             for r in s.rows {
                 lines.append("| \(markdownCode(r.mac)) | \(markdownCode(r.c64)) | \(markdownText(r.function)) |")
             }
@@ -332,17 +357,49 @@ enum KeyReference {
     }
 
     /// A key label as a code span (backticks inside get a longer fence; table pipes are escaped).
-    static func markdownCode(_ s: String) -> String {
+    public static func markdownCode(_ s: String) -> String {
         let fenced = s.contains("`") ? "`` \(s) ``" : "`\(s)`"
-        return fenced.replacingOccurrences(of: "|", with: "\\|")
+        return fenced.replacing("|", with: "\\|")
     }
 
-    static func markdownText(_ s: String) -> String {
+    public static func markdownText(_ s: String) -> String {
         var out = ""
         for ch in s {
             if "|*_<>[]\\`".contains(ch) { out.append("\\") }
             out.append(ch)
         }
         return out
+    }
+
+    // MARK: JSON (the web page's keyboard reference)
+
+    /// `sections(style:)` as JSON: `[{"title": …, "rows": [[key, c64, function], …]}, …]`.
+    public static func json(style: KeyLabelStyle) -> String {
+        let body = sections(style: style).map { s in
+            let rows = s.rows.map { "[\(jsonString($0.mac)),\(jsonString($0.c64)),\(jsonString($0.function))]" }
+            return "{\"title\":\(jsonString(s.title)),\"rows\":[\(rows.joined(separator: ","))]}"
+        }
+        return "[" + body.joined(separator: ",") + "]"
+    }
+
+    /// `s` as a JSON string literal.
+    public static func jsonString(_ s: String) -> String {
+        var out = "\""
+        for scalar in s.unicodeScalars {
+            switch scalar {
+            case "\"": out += "\\\""
+            case "\\": out += "\\\\"
+            case "\n": out += "\\n"
+            case "\t": out += "\\t"
+            default:
+                if scalar.value < 0x20 {
+                    out += "\\u" + String(repeating: "0", count: 4 - String(scalar.value, radix: 16).count)
+                        + String(scalar.value, radix: 16)
+                } else {
+                    out.unicodeScalars.append(scalar)
+                }
+            }
+        }
+        return out + "\""
     }
 }

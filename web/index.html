@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flight Simulator II</title>
+  <meta name="description" content="SubLogic's Flight Simulator II for the Commodore 64 (1984), translated from the original program and running in the browser.">
+  <link rel="stylesheet" href="fs2.css">
+  <script type="module" src="main.js"></script>
+</head>
+<body>
+  <header class="bar">
+    <h1>Flight Simulator II <span class="sub">Commodore 64 · 1984</span></h1>
+    <nav class="controls" aria-label="Machine">
+      <button type="button" id="pause" aria-pressed="false" disabled>Pause</button>
+      <button type="button" id="restart" title="RUN/STOP + RESTORE: back to the title after the reload" disabled>Restart</button>
+      <button type="button" id="reset" title="Power off and on (without the disk loading wait)" disabled>Reset</button>
+      <button type="button" id="demo" title="Start the demo, as the operating-mode prompt's A (while flying)" aria-pressed="false" disabled>Demo</button>
+      <span class="sep" aria-hidden="true"></span>
+      <button type="button" id="sound" aria-pressed="true" title="Sound on or off">Sound</button>
+      <input type="range" id="volume" min="0" max="100" step="1" aria-label="Volume">
+      <span class="sep" aria-hidden="true"></span>
+      <button type="button" id="keys" title="Keyboard reference">Keys</button>
+      <button type="button" id="settings-open">Settings</button>
+      <button type="button" id="fullscreen" title="Full screen (Esc is RUN/STOP; hold Esc to leave)">Full screen</button>
+      <button type="button" id="about-open">About</button>
+    </nav>
+  </header>
+
+  <main class="stage" id="stage">
+    <canvas id="screen" width="384" height="331" aria-label="The Commodore 64's screen"></canvas>
+    <div class="badge" id="paused-badge" hidden>Paused</div>
+
+    <section class="overlay" id="loading">
+      <p class="lead">Loading…</p>
+    </section>
+
+    <section class="overlay" id="start" hidden>
+      <button type="button" class="primary" id="start-button">Click to fly</button>
+      <p>The keyboard is the Commodore 64's. Esc is RUN/STOP; the full list is under Keys.</p>
+    </section>
+
+    <section class="overlay" id="drop" hidden>
+      <div class="dropzone" id="dropzone">
+        <p class="lead">Drop your Flight Simulator II disk image here</p>
+        <p>Version 1.0 for the Commodore 64 (NTSC), as a .d64 file. It stays in this browser.</p>
+        <label class="primary file">Choose disk image… <input type="file" id="disk-file" accept=".d64,application/octet-stream"></label>
+        <p class="error" id="drop-error" hidden></p>
+      </div>
+    </section>
+
+    <section class="overlay" id="message" hidden>
+      <p class="lead" id="message-title"></p>
+      <p id="message-text"></p>
+      <div class="actions">
+        <button type="button" class="primary" id="message-reset">Reset</button>
+        <button type="button" id="message-close">Close</button>
+      </div>
+    </section>
+  </main>
+
+  <p class="hint" id="hint">Needs a keyboard. Click the screen if keys stop reaching the game.</p>
+
+  <dialog id="settings">
+    <form method="dialog">
+      <h2>Settings</h2>
+      <fieldset>
+        <legend>Pacing</legend>
+        <label><input type="radio" name="pacing" value="authentic"> Authentic: the view changes when the original finishes a frame (about once a second)</label>
+        <label><input type="radio" name="pacing" value="smooth"> Smooth: the view is redrawn every display frame</label>
+      </fieldset>
+      <fieldset>
+        <legend>Display</legend>
+        <label><input type="radio" name="aspect" value="ntsc"> NTSC pixel shape</label>
+        <label><input type="radio" name="aspect" value="square"> Square pixels</label>
+        <label><input type="radio" name="monitor" value="color"> Color monitor</label>
+        <label><input type="radio" name="monitor" value="bw"> Black-and-white monitor</label>
+      </fieldset>
+      <fieldset>
+        <legend>Joysticks</legend>
+        <label><input type="checkbox" name="keypadJoystick"> Keypad as joystick</label>
+        <label><input type="checkbox" name="strictJoystick"> Strict: a deflected joystick suspends the keyboard, as on the C64</label>
+      </fieldset>
+      <div class="actions"><button class="primary" value="close">Done</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="reference" class="wide">
+    <form method="dialog">
+      <h2>Keyboard reference</h2>
+      <div id="reference-body"></div>
+      <div class="actions"><button class="primary" value="close">Close</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="about">
+    <form method="dialog">
+      <h2>Flight Simulator II</h2>
+      <p>A port of SubLogic's Flight Simulator II for the Commodore 64 (1984), translated from the original program into Swift and compiled to WebAssembly.</p>
+      <p>Original by Bruce Artwick, published by SubLogic (1984). Unofficial port; not affiliated with or endorsed by the rights holders.</p>
+      <div class="actions"><button class="primary" value="close">Close</button></div>
+    </form>
+  </dialog>
+</body>
+</html>

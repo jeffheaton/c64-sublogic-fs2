@@ -2,6 +2,7 @@ import AppKit
 import C64Kit
 import FS2Core
 import FS2Data
+import FS2Host
 import UniformTypeIdentifiers
 
 /// The app: one window showing the C64 frame, the menus, settings, the first-run import and the
@@ -529,11 +530,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
 
     /// Merges keyboard and gamepad into the engine's input (sent only when it changes).
     private func postInput() {
-        var keys = keyboard.matrix(keypadJoystick: settings.keypadJoystick)
-        keys.joystick1 = keys.joystick1.union(gamepadJoysticks.0).resolvingOpposites
-        keys.joystick2 = keys.joystick2.union(gamepadJoysticks.1).resolvingOpposites
-        var input = InputState()
-        input.keys = keys
+        let input = InputState(keyboard: keyboard, keypadJoystick: settings.keypadJoystick, gamepad: gamepadJoysticks)
         guard input != postedInput else { return }
         postedInput = input
         host?.setInput(input)

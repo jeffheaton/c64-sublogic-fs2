@@ -1,4 +1,5 @@
 import C64Kit
+import FS2Host
 import GameController
 
 /// Game controllers (GameController framework) as C64 joysticks, polled once per display refresh.

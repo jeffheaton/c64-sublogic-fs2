@@ -1,6 +1,7 @@
 import C64Kit
 import FS2Core
 @testable import FS2App
+@testable import FS2Host
 import Testing
 
 /// The key timing between the Mac keyboard and the C64 matrix (`KeyTiming`), frame by frame.

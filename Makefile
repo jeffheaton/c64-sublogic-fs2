@@ -7,6 +7,8 @@
 #   make lab        the dev-only lab CLI: .build/release/fs2lab
 #   make clean      remove build/ and SwiftPM's build products
 #   make web-core   build the core modules for WebAssembly (the portability guard)
+#   make web        the web build, assembled into build/web (with the deploy disk when there is one)
+#   make web-serve  serve build/web on http://localhost:8064 with the isolation headers
 #
 # In sandboxed shells, SwiftPM has to run outside the sandbox.
 #
@@ -40,7 +42,11 @@ SWIFTLY  ?= $(shell command -v swiftly 2>/dev/null || echo $(HOME)/.swiftly/bin/
 WASM_BUILD := $(CAPPED) $(BUILD_TIMEOUT) $(SWIFTLY) run swift build +$(WASM_SWIFT_VERSION) \
 	--swift-sdk $(WASM_SDK) -c release --disable-default-traits --scratch-path .build-web
 
-.PHONY: all app check-app test audit lab clean icon web-core
+WEB      := build/web
+WEB_DISK := build/web-disk/FlightSimulatorII.d64
+WASM_OPT ?= $(shell command -v wasm-opt 2>/dev/null)
+
+.PHONY: all app check-app test audit lab clean icon web-core web web-serve
 
 all: app
 
@@ -102,6 +108,27 @@ lab:
 # paths). Cheap enough to run after any change to C64Kit, FS2Data or FS2Core.
 web-core:
 	$(WASM_BUILD) --target FS2Core
+
+# The page (web/), fs2.wasm (optimized by Binaryen's wasm-opt when it is installed) and, when
+# `make web-disk` made one, the scrubbed deploy disk. build/ is ignored: nothing here is committed.
+web:
+	$(WASM_BUILD) --product FS2Web
+	rm -rf "$(WEB)"
+	mkdir -p "$(WEB)"
+	cp web/*.html web/*.css web/*.js "$(WEB)/"
+	@wasm="$$($(SWIFTLY) run swift build +$(WASM_SWIFT_VERSION) --swift-sdk $(WASM_SDK) -c release \
+		--disable-default-traits --scratch-path .build-web --show-bin-path)/FS2Web.wasm"; \
+	if [ -n "$(WASM_OPT)" ]; then \
+		echo "wasm-opt -Oz $$wasm"; "$(WASM_OPT)" -Oz --strip-debug --strip-producers "$$wasm" -o "$(WEB)/fs2.wasm"; \
+	else \
+		echo "note: wasm-opt (Binaryen) is not installed; fs2.wasm is not optimized"; cp "$$wasm" "$(WEB)/fs2.wasm"; \
+	fi
+	@if [ -f "$(WEB_DISK)" ]; then cp "$(WEB_DISK)" "$(WEB)/"; \
+	else echo "note: no deploy disk (make web-disk); the page will ask for one"; fi
+	@ls -l "$(WEB)"
+
+web-serve:
+	Scripts/serve-web.py "$(WEB)" 8064
 
 clean:
 	rm -rf build .build-app .build-web
