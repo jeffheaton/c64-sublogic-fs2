@@ -4,6 +4,10 @@ A native macOS port of SubLogic's **Flight Simulator II** for the Commodore 64 (
 1984). This is an unofficial project, not affiliated with or endorsed by the rights holders (see
 [Legal](#legal)).
 
+**Play it in your browser: <https://www.heatonresearch.com/c64-sublogic-fs2/>**: the same port
+compiled to WebAssembly (see [Web version](#web-version)). **How the original works:**
+[ARCHITECTURE.md](ARCHITECTURE.md).
+
 This is a translation of the original 6502 program into Swift, routine by routine. It is
 **not an emulator**: no 6502 CPU is emulated and no disk drive either. The game's own routines run
 as Swift code on the original memory layout with the original integer math, and only the C64's
@@ -16,6 +20,10 @@ program (in a dev-only 6502 lab) and compare the results byte for byte and pixel
 The repository and the app contain no copy of SubLogic's program or data files: no byte dumps,
 disassembly listings or data tables. The program's bytes are read at run time from your own disk
 image, which the app imports the first time it starts.
+
+For a tour of how the original program works inside (the raster split, the 3D pipeline, the
+scenery bytecode, the flight model and the rest), written for people who programmed the C64, see
+[ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Requirements
 
@@ -481,7 +489,7 @@ Headless runs keep their library in memory unless `--mode-library <path>` names 
 
 ## Web version
 
-The same port runs in a browser. `fs2.wasm` (the core, the shared host and a WebAssembly entry
+The same port runs in a browser, online at <https://www.heatonresearch.com/c64-sublogic-fs2/>. `fs2.wasm` (the core, the shared host and a WebAssembly entry
 point) runs in a Web Worker; a small page (`web/`, plain modules, no build step) draws the frames,
 plays the SID through an AudioWorklet and passes the keyboard on. WebAssembly has no threads, so
 the engine runs **inline**: the translated program runs on the worker's own stack, and at every

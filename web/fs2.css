@@ -147,6 +147,7 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.5); }
 dialog h2 { margin: 0 0 12px; font-size: 18px; }
 dialog h3 { margin: 18px 0 6px; font-size: 15px; }
 dialog .actions { display: flex; justify-content: flex-end; margin-top: 16px; }
+dialog a { color: var(--accent); }
 fieldset { margin: 0 0 12px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; }
 legend { padding: 0 4px; color: var(--muted); font-size: 13px; }
 fieldset label { display: block; padding: 3px 0; }
