@@ -1,0 +1,80 @@
+# Builds the web version and deploys it to GitHub Pages, on demand (Actions ▸ Deploy web build ▸ Run).
+#
+# The disk image is never in git. The workflow downloads the scrubbed deploy disk (`make web-disk`)
+# from a release, checks its SHA-256 and puts it next to the page. One-time setup (README, "Web"):
+#   - Settings ▸ Pages ▸ Source: GitHub Actions.
+#   - A release holding FlightSimulatorII.d64 (the file `make web-disk` writes), by default tagged
+#     `web-disk` in this repository; or in another private repository, named by the variable
+#     FS2_ASSETS_REPO, with a fine-grained read-only token for it in the secret FS2_ASSETS_TOKEN.
+#   - The variable FS2_DISK_SHA256: the file's SHA-256 (`make web-disk` prints it).
+# Run `make web-audit` and `make web-check` locally before deploying.
+
+name: Deploy web build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Swift and its WebAssembly SDK (versions in web/toolchain.env)
+        run: |
+          source web/toolchain.env
+          curl -fsSLO "https://download.swift.org/swiftly/linux/swiftly-$(uname -m).tar.gz"
+          tar zxf "swiftly-$(uname -m).tar.gz"
+          ./swiftly init --assume-yes --skip-install --quiet-shell-followup
+          . "${SWIFTLY_HOME_DIR:-$HOME/.local/share/swiftly}/env.sh"
+          dirname "$(command -v swiftly)" >> "$GITHUB_PATH"
+          swiftly install "$WASM_SWIFT_VERSION" --assume-yes --post-install-file=post-install.sh
+          if [ -f post-install.sh ]; then sudo bash post-install.sh; fi
+          swiftly run +"$WASM_SWIFT_VERSION" swift sdk install "$WASM_SDK_URL" --checksum "$WASM_SDK_CHECKSUM"
+
+      - name: Install Binaryen (wasm-opt)
+        run: |
+          version=version_133
+          file="binaryen-$version-x86_64-linux.tar.gz"
+          curl -fsSLO "https://github.com/WebAssembly/binaryen/releases/download/$version/$file"
+          curl -fsSLO "https://github.com/WebAssembly/binaryen/releases/download/$version/$file.sha256"
+          sha256sum --check "$file.sha256"
+          tar zxf "$file"
+          echo "$PWD/binaryen-$version/bin" >> "$GITHUB_PATH"
+
+      - name: Build the page and fs2.wasm
+        run: make web
+
+      - name: Add the deploy disk
+        env:
+          GH_TOKEN: ${{ secrets.FS2_ASSETS_TOKEN || github.token }}
+          ASSETS_REPO: ${{ vars.FS2_ASSETS_REPO || github.repository }}
+          ASSETS_TAG: ${{ vars.FS2_ASSETS_TAG || 'web-disk' }}
+          DISK_SHA256: ${{ vars.FS2_DISK_SHA256 }}
+        run: |
+          test -n "$DISK_SHA256" || { echo "::error::set the repository variable FS2_DISK_SHA256"; exit 1; }
+          gh release download "$ASSETS_TAG" --repo "$ASSETS_REPO" --pattern FlightSimulatorII.d64 --dir build/web --clobber
+          echo "$DISK_SHA256  build/web/FlightSimulatorII.d64" | sha256sum --check
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

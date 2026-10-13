@@ -479,6 +479,73 @@ Headless runs keep their library in memory unless `--mode-library <path>` names 
 - **Character set.** Without an imported character ROM the editor uses a look-alike font.
 - **Smooth pacing** is an addition; Authentic is the original's behavior.
 
+## Web version
+
+The same port runs in a browser. `fs2.wasm` (the core, the shared host and a WebAssembly entry
+point) runs in a Web Worker; a small page (`web/`, plain modules, no build step) draws the frames,
+plays the SID through an AudioWorklet and passes the keyboard on. WebAssembly has no threads, so
+the engine runs **inline**: the translated program runs on the worker's own stack, and at every
+frame end it hands over to the same host step the Mac app's engine thread uses (`FS2Host`), which
+applies the controls, posts the picture and the sound, and sleeps (`Atomics.wait`) until the next
+frame is due. Inline and threaded runs compute exactly the same frames, sound and memory
+(`NativeEngineInlineTests`, `InlineHostTests`), and so do the native and wasm builds
+(`make web-check`).
+
+It needs a desktop browser with a keyboard: a current Chrome, Edge, Firefox or Safari. The page
+uses `SharedArrayBuffer`, which needs cross-origin isolation: a server that sends the COOP and COEP
+headers, or, on hosts that cannot (GitHub Pages), the page's service worker (`isolation-sw.js`),
+which adds them and reloads the page once on the first visit. Private windows that block service
+workers cannot run it there.
+
+### Building it
+
+The wasm build uses swift.org's toolchain through [swiftly](https://www.swift.org/install/macos/)
+(Xcode's cannot build for WebAssembly) and the matching Swift SDK, pinned in `web/toolchain.env`:
+
+```sh
+swiftly install 6.4.1
+swiftly run +6.4.1 swift sdk install <WASM_SDK_URL> --checksum <WASM_SDK_CHECKSUM>   # web/toolchain.env
+brew install binaryen   # wasm-opt: fs2.wasm 13 MB to 5 MB (optional)
+
+make web-disk    # the deploy disk, from $FS2_D64 or the app's imported copy
+make web         # build/web: the page, fs2.wasm and the deploy disk
+make web-serve   # http://localhost:8064
+make web-audit   # the shipping audits on fs2.wasm and the deploy disk
+make web-check   # native and wasm compute the same, and 30 nested restarts as wasm (needs Node)
+make web-core    # only the core modules for wasm: the portability check after core changes
+```
+
+`make web-disk` writes a 35-track image with only the 656 sectors behind the port's 164 logical
+blocks (no directory, no BAM, nothing of a modified copy's boot loader) and the modified copy's
+text blanked with the rule the cold start applies. The port builds exactly the same machine from
+it (`DeployDiskTests`); it is no use outside the port. Without a disk next to it, the page asks
+for the visitor's own, checks it like the Mac app and keeps it in the browser.
+
+### Deploying to GitHub Pages
+
+`.github/workflows/web.yml` (Actions ▸ Deploy web build ▸ Run workflow) builds the page and
+`fs2.wasm`, downloads the deploy disk from a release, checks its SHA-256 and publishes the folder.
+Run `make web-audit` and `make web-check` first. One-time setup:
+
+1. Settings ▸ Pages ▸ Source: **GitHub Actions**. Pages for a private repository needs a paid
+   plan; the published site is public either way.
+2. A release holding the `FlightSimulatorII.d64` that `make web-disk` wrote, tagged `web-disk` in
+   this repository (release files are not in git, and they are as visible as the repository). For
+   a public repository, use a separate private one instead: set the variable `FS2_ASSETS_REPO`
+   (owner/name, and `FS2_ASSETS_TAG` if not `web-disk`) and the secret `FS2_ASSETS_TOKEN`, a
+   fine-grained token with read access to its contents.
+3. The variable `FS2_DISK_SHA256`: the SHA-256 that `make web-disk` prints.
+
+### Known limits
+
+- Windows and Linux browsers keep Ctrl+N, Ctrl+T and Ctrl+W for themselves, so the NAV radio
+  and transponder commands (Ctrl+N, Ctrl+T) do not reach the game there; in full screen, Chrome and
+  Edge pass them on (Keyboard Lock). Browsers on macOS use ⌘ and are not affected.
+- Esc is RUN/STOP. In full screen, Chrome and Edge pass it on too (hold Esc to leave full
+  screen); other browsers leave full screen.
+- Not yet in the web version: game controllers, the character ROM import, and importing or
+  exporting the mode library (the library the editor saves is kept in the browser).
+
 ## Development
 
 The port is checked against the original program at every level. These are the tools.
@@ -490,7 +557,10 @@ The port is checked against the original program at every level. These are the t
 | `Sources/C64Kit` | C64 hardware models: palette, VIC-II frame presenter, 6581 SID, keyboard matrix, D64 reader |
 | `Sources/FS2Data` | SubLogic's 1 KB logical-block disk format, the cold-start memory image, disk validation |
 | `Sources/FS2Core` | The port: translated routines working on the original memory layout (`Machine`), and `NativeEngine`, which runs them |
-| `Sources/FS2App` | The Mac app: window, menus, key map, audio, settings, first run, headless mode |
+| `Sources/FS2Host` | What every host of the engine shares: key map and timing, keyboard reference, restart sequence, demo, SID renderer, frame pacing and the per-frame host step |
+| `Sources/FS2App` | The Mac app: window, menus, audio output, game controllers, settings, first run, headless mode |
+| `Sources/FS2Web`, `Sources/CFS2Web`, `web/` | The web version: `fs2.wasm`'s entry point, the page's imports, and the page |
+| `Sources/fs2disk`, `Sources/fs2check` | The web deploy's disk image, and the native-versus-wasm determinism check |
 | `Sources/M6502`, `Sources/FS2LabKit`, `Sources/fs2lab` | The **lab**, a dev-only verification oracle |
 | `Packaging` | Info.plist, the icon generator, the bundle checker |
 | `Tests` | Unit tests, the app's tests, the differential tests and the shipping audits |
@@ -596,6 +666,9 @@ bytes. `make audit` builds the app and runs them over the repository and the app
 The audits look for copies of the program, not for similarity to it: the port is a translation, so
 its routines follow the original's logic by design.
 
+`make web-audit` runs them on the web build: `fs2.wasm` and the deploy disk (see
+[Web version](#web-version)).
+
 ### The `re/` corpus
 
 | Path | What |
@@ -618,7 +691,11 @@ owners and are used only to identify the original game and hardware.
 The repository contains no copy of SubLogic's program or data files: no byte dumps, disassembly
 listings or data tables. The port is a translation of the program into Swift, and every byte of
 the original program it works on (code, tables, text, graphics) is read at run time from a disk
-image you make from your own copy of the game. No disk image is included or distributed here.
+image you make from your own copy of the game. No disk image is included in the repository.
+
+A deployment of the web version carries a disk image that whoever deploys it supplies from their
+own copy: `make web-disk` keeps only the sectors the port reads and blanks what a modified copy
+added (see [Web version](#web-version)). It is never committed.
 
 The Commodore 64 character ROM is not included either. Text screens use a look-alike font drawn
 for this port; importing a dump of the character ROM from your own C64 is optional.

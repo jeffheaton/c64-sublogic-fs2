@@ -583,6 +583,8 @@ async function findDisk() {
 }
 
 async function main() {
+  // For the console: the engine's state (worker, controls, audio ring).
+  Object.defineProperty(window, "fs2", { value: engine });
   wireControls();
   applyVolume();
   layout();

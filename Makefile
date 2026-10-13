@@ -43,9 +43,11 @@ APP_BUILD := $(CAPPED) $(BUILD_TIMEOUT) $(SWIFT) build -c release --product FS2 
 # The WebAssembly build uses swift.org's toolchain through swiftly (Xcode's cannot use the wasm
 # Swift SDK), pinned with the SDK in web/toolchain.env. It has its own build directory.
 include web/toolchain.env
+# Where `swift` is that toolchain already (a CI container), `make WASM_SWIFT=swift`.
 SWIFTLY  ?= $(shell command -v swiftly 2>/dev/null || echo $(HOME)/.swiftly/bin/swiftly)
-WASM_BUILD := $(CAPPED) $(BUILD_TIMEOUT) $(SWIFTLY) run swift build +$(WASM_SWIFT_VERSION) \
-	--swift-sdk $(WASM_SDK) -c release --disable-default-traits --scratch-path .build-web
+WASM_SWIFT ?= $(SWIFTLY) run +$(WASM_SWIFT_VERSION) swift
+WASM_FLAGS := --swift-sdk $(WASM_SDK) -c release --disable-default-traits --scratch-path .build-web
+WASM_BUILD := $(CAPPED) $(BUILD_TIMEOUT) $(WASM_SWIFT) build $(WASM_FLAGS)
 
 WEB      := build/web
 WEB_DISK := build/web-disk/FlightSimulatorII.d64
@@ -126,8 +128,7 @@ web:
 	rm -rf "$(WEB)"
 	mkdir -p "$(WEB)"
 	cp web/*.html web/*.css web/*.js "$(WEB)/"
-	@wasm="$$($(SWIFTLY) run swift build +$(WASM_SWIFT_VERSION) --swift-sdk $(WASM_SDK) -c release \
-		--disable-default-traits --scratch-path .build-web --show-bin-path)/FS2Web.wasm"; \
+	@wasm="$$($(WASM_SWIFT) build $(WASM_FLAGS) --show-bin-path)/FS2Web.wasm"; \
 	if [ -n "$(WASM_OPT)" ]; then \
 		echo "wasm-opt -Oz $$wasm"; "$(WASM_OPT)" -Oz --strip-debug --strip-producers "$$wasm" -o "$(WEB)/fs2.wasm"; \
 	else \
@@ -152,10 +153,10 @@ web-disk:
 web-audit: web
 	@if git ls-files | grep -i -E '\.(d64|d71|d81|g64|prg|rom)$$'; then \
 		echo "error: git tracks a disk or ROM image"; exit 1; fi
-	$(CAPPED) $(BUILD_TIMEOUT) $(SWIFTLY) run swift build +$(WASM_SWIFT_VERSION) --swift-sdk $(WASM_SDK) -c release \
+	$(CAPPED) $(BUILD_TIMEOUT) $(WASM_SWIFT) build --swift-sdk $(WASM_SDK) -c release \
 		--package-path Scripts/wasm-baseline --scratch-path .build-web-baseline
 	mkdir -p build/web-audit
-	@baseline="$$($(SWIFTLY) run swift build +$(WASM_SWIFT_VERSION) --swift-sdk $(WASM_SDK) -c release \
+	@baseline="$$($(WASM_SWIFT) build --swift-sdk $(WASM_SDK) -c release \
 		--package-path Scripts/wasm-baseline --scratch-path .build-web-baseline --show-bin-path)/WasmBaseline.wasm"; \
 	if [ -n "$(WASM_OPT)" ]; then "$(WASM_OPT)" -Oz --strip-debug --strip-producers "$$baseline" -o build/web-audit/baseline.wasm; \
 	else cp "$$baseline" build/web-audit/baseline.wasm; fi
@@ -173,8 +174,7 @@ web-check:
 	mkdir -p "$(WEB_CHECK)"
 	"$$($(SWIFT) build -c release --show-bin-path)/fs2check" session < "$(SOURCE_D64)" \
 		| grep -v '^stack' > "$(WEB_CHECK)/native.txt"
-	@wasm="$$($(SWIFTLY) run swift build +$(WASM_SWIFT_VERSION) --swift-sdk $(WASM_SDK) -c release \
-		--disable-default-traits --scratch-path .build-web --show-bin-path)/fs2check.wasm"; \
+	@wasm="$$($(WASM_SWIFT) build $(WASM_FLAGS) --show-bin-path)/fs2check.wasm"; \
 	node --no-warnings Scripts/run-wasi.mjs "$$wasm" session < "$(SOURCE_D64)" | grep -v '^stack' > "$(WEB_CHECK)/wasm.txt" && \
 	diff "$(WEB_CHECK)/native.txt" "$(WEB_CHECK)/wasm.txt" && \
 	echo "web-check: native and wasm identical ($$(wc -l < "$(WEB_CHECK)/native.txt" | tr -d ' ') digests)" && \
