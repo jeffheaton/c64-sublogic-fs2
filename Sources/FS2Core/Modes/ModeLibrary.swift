@@ -1,5 +1,3 @@
-import Foundation
-
 /// The mode library: the 65-byte mode record at $0964-$09A4, the ten built-in modes in the
 /// editor overlay, the fifteen user modes at `[$0961]` = $C800, and the library disk (logical
 /// block 64) the editor's CTRL-X loads and CTRL-Z formats and writes. See `re/docs/editor.md`.

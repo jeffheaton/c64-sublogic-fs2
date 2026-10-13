@@ -1,5 +1,7 @@
 import C64Kit
+#if !os(WASI)
 import Foundation
+#endif
 
 /// Everything the port needs from the user's disk, built from a .d64 at launch.
 public struct GameData: Sendable {
@@ -37,12 +39,13 @@ public struct GameData: Sendable {
         self.charROM = charROM?.count == 4096 ? charROM : nil
     }
 
+    public func overlay(_ o: FS2Layout.Overlay) -> [UInt8] { ColdImage.overlay(o, from: disk) }
+
+    #if !os(WASI)
     public init(d64URL: URL, charROMURL: URL? = nil) throws {
         let rom = try charROMURL.map { [UInt8](try Data(contentsOf: $0)) }
         try self.init(d64: try D64Image(contentsOf: d64URL), charROM: rom)
     }
-
-    public func overlay(_ o: FS2Layout.Overlay) -> [UInt8] { ColdImage.overlay(o, from: disk) }
 
     /// Where the app keeps the imported disk: ~/Library/Application Support/FS2/.
     public static var supportDirectory: URL {
@@ -52,4 +55,5 @@ public struct GameData: Sendable {
 
     public static var importedDiskURL: URL { supportDirectory.appendingPathComponent("FlightSimulatorII.d64") }
     public static var importedCharROMURL: URL { supportDirectory.appendingPathComponent("chargen.rom") }
+    #endif
 }

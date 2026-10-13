@@ -1,3 +1,5 @@
+import C64Kit
+
 /// Display-list geometry: 3D and ground points (ops 00/01/02/40/41), the vertex cache (ops
 /// 31/42/32/33/35), polygons (2F/29), the line driver $8B40, the 2D screen line (06) and the
 /// dashed ground line (2B).
@@ -19,7 +21,7 @@ extension Machine {
         case Scenery.transform3DEntry: transform3D(y: dest)
         case Scenery.transformGroundEntry: transformGround(y: dest)
         default:
-            preconditionFailure(String(format: "point transform operand $%04X at $%04X", u16(operand), operand))
+            preconditionFailure("point transform operand $\(hex(u16(operand), width: 4)) at $\(hex(operand, width: 4))")
         }
     }
 
@@ -442,7 +444,7 @@ extension Machine {
             case 0x0D:
                 c += 4                                      // the disabled call
             default:
-                preconditionFailure(String(format: "line driver opcode $%02X at $8B89", m[Scenery.lineDrawOpcode]))
+                preconditionFailure("line driver opcode $\(hex(m[Scenery.lineDrawOpcode])) at $8B89")
             }
         }
         // $8B8C: B becomes the current point.
@@ -465,7 +467,7 @@ extension Machine {
             charge(c + 6)
             return false
         default:
-            preconditionFailure(String(format: "line driver exit opcode $%02X at $8BAC", m[Scenery.lineDriverExitOpcode]))
+            preconditionFailure("line driver exit opcode $\(hex(m[Scenery.lineDriverExitOpcode])) at $8BAC")
         }
     }
 

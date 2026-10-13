@@ -1,5 +1,4 @@
 import C64Kit
-import CryptoKit
 
 /// SubLogic's logical block filesystem: the disk is read as 164 blocks of 1 KB (4 consecutive used
 /// sectors each). Used sectors run in track/sector order over tracks 1-35, skipping track 3 entirely
@@ -72,7 +71,7 @@ public struct SubLogicDisk: Sendable {
         for (b, offsets) in crackModifiedBytes where b == n {
             for i in offsets { masked[i] = 0 }
         }
-        return SHA256.hash(data: masked).prefix(8).map { String(format: "%02x", $0) }.joined()
+        return hexString(SHA2.sha256(masked).prefix(8))
     }
 
     /// First 8 bytes of the SHA-256 of each logical block of version 1.0, with the bytes of

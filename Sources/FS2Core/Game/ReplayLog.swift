@@ -1,4 +1,6 @@
+#if !os(WASI)
 import Foundation
+#endif
 
 /// A deterministic record of the original program's asynchronous inputs, captured by the lab
 /// (`fs2lab record`): raster-IRQ deliveries at poll points (with the inputs in effect), RESTORE,
@@ -63,6 +65,7 @@ public struct ReplayLog: Codable, Sendable {
         return h
     }
 
+    #if !os(WASI)
     public func write(to url: URL) throws {
         let enc = PropertyListEncoder()
         enc.outputFormat = .binary
@@ -72,4 +75,5 @@ public struct ReplayLog: Codable, Sendable {
     public static func read(from url: URL) throws -> ReplayLog {
         try PropertyListDecoder().decode(ReplayLog.self, from: Data(contentsOf: url))
     }
+    #endif
 }

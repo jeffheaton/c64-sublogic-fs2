@@ -1,4 +1,8 @@
+#if os(WASI)
+import WASILibc
+#else
 import Foundation
+#endif
 
 /// The SID's multimode filter: a two-pole state-variable filter (two integrators in a feedback
 /// loop) whose low-pass, band-pass and high-pass taps are summed according to the mode bits of

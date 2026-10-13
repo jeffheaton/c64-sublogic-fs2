@@ -1,4 +1,3 @@
-import Foundation
 
 /// A scripted run: frames to wait, keys and joystick to hold, screenshots to take.
 ///
@@ -54,7 +53,7 @@ public struct Session: Codable, Sendable {
     public static func parse(_ text: String) throws -> Session {
         var steps: [Step] = []
         let body = text.split(separator: "\n").filter { !$0.hasPrefix("#") }.joined(separator: " ")
-        func hex(_ s: String) -> Int? { Int(s.replacingOccurrences(of: "$", with: ""), radix: 16) }
+        func hex(_ s: String) -> Int? { Int(s.replacing("$", with: ""), radix: 16) }
         /// A hex address inside the 64 KB space (a sign or an out-of-range value is rejected).
         func address(_ s: String) -> Int? { hex(s).flatMap { (0...0xFFFF).contains($0) ? $0 : nil } }
         for token in body.split(whereSeparator: { $0 == " " || $0 == "\t" }) {
@@ -110,7 +109,7 @@ public struct Session: Codable, Sendable {
                                        frames: parts.count > 2 ? Int(parts[2]) ?? 8 : 8))
             case "poke":
                 guard parts.count == 3, let a = address(parts[1]),
-                      let v = UInt8(parts[2].replacingOccurrences(of: "$", with: ""), radix: 16) else {
+                      let v = UInt8(parts[2].replacing("$", with: ""), radix: 16) else {
                     throw bad
                 }
                 steps.append(.poke(address: a, value: v))

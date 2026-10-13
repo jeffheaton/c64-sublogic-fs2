@@ -1,5 +1,4 @@
 import C64Kit
-import Foundation
 
 /// Live inputs the app feeds the engine (applied at the next frame boundary).
 public struct InputState: Sendable, Equatable {

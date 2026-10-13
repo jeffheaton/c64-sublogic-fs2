@@ -1,3 +1,5 @@
+import C64Kit
+
 /// Reality-mode failures and drifts $EA84-$EB1B, the trim creep $EAE2, and the eight failure
 /// handlers $EB39-$EB62 dispatched through the table at $EA5C.
 extension Machine {
@@ -100,7 +102,7 @@ extension Machine {
         case 0xEB5B: self[R.failureMasks] &= 0xBF; charge(19)
         case 0xEB5F: self[R.failureMasks] &= 0x7F; charge(19)
         default:
-            preconditionFailure(String(format: "failure handler table entry $%04X is not a handler", address))
+            preconditionFailure("failure handler table entry $\(hex(address, width: 4)) is not a handler")
         }
     }
 

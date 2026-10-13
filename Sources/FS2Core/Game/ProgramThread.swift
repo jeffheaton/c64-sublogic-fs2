@@ -1,3 +1,4 @@
+#if !os(WASI)
 import Foundation
 
 /// Runs the game program on a thread of its own, with a stack large enough for the nested
@@ -66,3 +67,4 @@ public enum ProgramThread {
         }
     }
 }
+#endif

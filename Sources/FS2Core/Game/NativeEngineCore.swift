@@ -1,5 +1,4 @@
 import C64Kit
-import Foundation
 
 /// The program-thread side of `NativeEngine`: the hooks the port calls (`Machine.eventHandler`,
 /// `pollHandler`, `mainLoopHook`, the scheduler's frame ends) and the state both threads share.
@@ -90,6 +89,7 @@ final class NativeEngineCore: @unchecked Sendable {
 
     // MARK: Replay mode
 
+    #if !os(WASI)
     /// Program thread: replays `log` with D1a's `ReplayDriver` (the interrupts, keys and I/O
     /// reads come from the log). Parks at every matching checkpoint; from the first checkpoint on
     /// also at frame ends and run targets.
@@ -130,6 +130,7 @@ final class NativeEngineCore: @unchecked Sendable {
         }
         gate.park(.checkpoint(k))
     }
+    #endif
 
     // MARK: The hooks
 

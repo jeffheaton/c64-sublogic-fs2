@@ -1,3 +1,4 @@
+#if canImport(ImageIO)
 import CoreGraphics
 import Foundation
 import ImageIO
@@ -35,3 +36,4 @@ public enum ImageWriter {
         guard CGImageDestinationFinalize(dest) else { throw Error.cannotCreate(url) }
     }
 }
+#endif

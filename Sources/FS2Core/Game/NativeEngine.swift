@@ -1,6 +1,8 @@
 import C64Kit
-import Foundation
 import FS2Data
+#if !os(WASI)
+import Foundation
+#endif
 
 /// The native port as the app's `GameEngine`: the translated game program running on the virtual
 /// NTSC clock, presented frame by frame. See `re/docs/engine.md`.
@@ -13,6 +15,9 @@ import FS2Data
 ///   resumes it and returns when the clock reaches the target (or the program parks at a frame
 ///   end, where this thread presents the frame). Only one of the two threads runs at a time, and
 ///   the program computes the same thing however `run` slices the time.
+/// - **Inline execution** (`Execution.inline`, the only kind on WASI): no program thread. The
+///   program runs on the caller's stack inside `runInline`, and a `NativeEngineInlineHost` makes at
+///   every park the requests the threaded host makes between its `run` calls, with the same result.
 /// - **Interrupts.** D1a's `InterruptScheduler` runs the raster IRQ equivalents and the frame
 ///   ends on the clock; RESTORE goes to its poll point.
 /// - **Input** (the `GameEngine` contract): applied at every frame end before `onFrame`, as the
@@ -32,6 +37,23 @@ import FS2Data
 ///
 /// All methods must be called on one thread (the engine's), never concurrently.
 public final class NativeEngine: GameEngine {
+    /// Where the program runs.
+    public enum Execution: Sendable, Equatable {
+        /// On a thread of its own, driven by `run(untilCycle:)` and the other run calls.
+        case thread
+        /// On the caller's stack, driven by `runInline` and its host.
+        case inline
+
+        /// `.inline` on WASI (no threads), `.thread` elsewhere.
+        public static var platformDefault: Execution {
+            #if os(WASI)
+            .inline
+            #else
+            .thread
+            #endif
+        }
+    }
+
     /// The port's state. Read or change it only between calls of `run` (the program is parked
     /// then); `poke` is the sanctioned way to change memory.
     public let machine: Machine
@@ -45,10 +67,15 @@ public final class NativeEngine: GameEngine {
     /// presented from the machine there (`frame` = the clock's frame).
     public var onCheckpoint: ((Int, FrameOutput) -> Void)?
 
-    private let core: NativeEngineCore
+    let core: NativeEngineCore
     private let replaying: Bool
+    public let execution: Execution
+    #if !os(WASI)
     /// The program's thread (it waits for the first `run` before it starts the program).
     private var thread: Thread?
+    #endif
+    /// Inline execution: the host and the request in progress (`NativeEngineInline.swift`).
+    var inline = InlineState()
     /// Frames delivered to `onFrame` so far.
     public private(set) var framesDelivered: UInt64 = 0
     /// Frames whose window Smooth pacing drew (the others showed the real window).
@@ -56,26 +83,46 @@ public final class NativeEngine: GameEngine {
 
     // MARK: Creating
 
+    /// The mode library store an engine uses unless told otherwise: the Mac's file, none on WASI
+    /// (the web build passes its own).
+    public static var defaultModeLibrary: ModeLibrary.IO? {
+        #if os(WASI)
+        nil
+        #else
+        ModeLibraryFile.standard.io
+        #endif
+    }
+
     /// An engine at the stage-2 handoff of `data`'s disk, ready for the cold start.
     public convenience init(data: GameData, options: EngineOptions = EngineOptions(),
-                            modeLibrary: ModeLibrary.IO? = ModeLibraryFile.standard.io) {
+                            modeLibrary: ModeLibrary.IO? = NativeEngine.defaultModeLibrary,
+                            execution: Execution = .platformDefault) {
         let m = Machine.booting(blocks: data.disk.blocks)
         m.modeLibraryIO = modeLibrary
-        self.init(machine: m, charROM: data.charROM, options: options)
+        self.init(machine: m, charROM: data.charROM, options: options, execution: execution)
     }
 
     /// An engine that cold-starts `machine` (which must be at the stage-2 handoff, as
     /// `Machine.booting` builds it).
-    public init(machine: Machine, charROM: [UInt8]? = nil, options: EngineOptions = EngineOptions()) {
+    public init(machine: Machine, charROM: [UInt8]? = nil, options: EngineOptions = EngineOptions(),
+                execution: Execution = .platformDefault) {
         self.machine = machine
         self.charROM = charROM
         replaying = false
+        self.execution = execution
         core = NativeEngineCore(machine: machine)
         core.options = options
-        let core = self.core
-        thread = Self.startThread { core.runNormal() }
+        #if os(WASI)
+        precondition(execution == .inline, "no program thread on WASI")
+        #else
+        if execution == .thread {
+            let core = self.core
+            thread = Self.startThread { core.runNormal() }
+        }
+        #endif
     }
 
+    #if !os(WASI)
     /// An engine that replays a lab recording with D1a's `ReplayDriver`: `machine` holds the
     /// recording's start state (`.mainLoop`: the top of the main loop; `.coldStart`: the stage-2
     /// handoff). The driver supplies the interrupts, the keys and the I/O reads; `input` and
@@ -85,15 +132,18 @@ public final class NativeEngine: GameEngine {
         self.machine = machine
         self.charROM = charROM
         replaying = true
+        execution = .thread
         core = NativeEngineCore(machine: machine)
         let core = self.core
         thread = Self.startThread { core.runReplay(log, from: start) }
     }
+    #endif
 
     deinit {
         core.gate.terminate()
     }
 
+    #if !os(WASI)
     private static func startThread(_ body: @escaping @Sendable () -> Never) -> Thread {
         let t = Thread { body() }
         t.name = "FS2 game program"
@@ -102,6 +152,7 @@ public final class NativeEngine: GameEngine {
         t.start()
         return t
     }
+    #endif
 
     // MARK: GameEngine
 
@@ -126,6 +177,7 @@ public final class NativeEngine: GameEngine {
     public var replayOutcome: ReplayDriver.Outcome? { core.replayOutcome }
 
     public func run(untilCycle cycle: UInt64) {
+        precondition(execution == .thread, "an inline engine runs through runInline")
         while core.endReason == nil && machine.clock.cycles < cycle {
             core.target = cycle
             handle(resume())
@@ -142,6 +194,7 @@ public final class NativeEngine: GameEngine {
     /// unless `deliverFrames` is false. Returns true when it stopped at a key wait.
     @discardableResult
     public func runToKeyWait(maxFrames: Int, deliverFrames: Bool = true) -> Bool {
+        precondition(execution == .thread, "an inline engine runs through runInline")
         if parkedAtKeyWait == machine.clock.cycles { return true }
         let limit = machine.clock.cycles + UInt64(max(0, maxFrames)) * VirtualClock.cyclesPerFrame
         core.stopAtKeyWait = true
@@ -160,7 +213,7 @@ public final class NativeEngine: GameEngine {
 
     /// The clock when `runToKeyWait` last stopped (the program is still parked at that key wait
     /// while the clock has not moved).
-    private var parkedAtKeyWait: UInt64?
+    var parkedAtKeyWait: UInt64?
 
     /// Runs until the program is at the top of its main loop ($204B, before a pass: where the
     /// lab's `pc:204B` stops), or until `maxFrames` frames have passed. Returns true at once when
@@ -169,6 +222,7 @@ public final class NativeEngine: GameEngine {
     /// it stopped at the top of the loop.
     @discardableResult
     public func runToMainLoopTop(maxFrames: Int, deliverFrames: Bool = true) -> Bool {
+        precondition(execution == .thread, "an inline engine runs through runInline")
         guard !replaying else { return false }
         if parkedAtMainLoopTop == machine.clock.cycles { return true }
         let limit = machine.clock.cycles + UInt64(max(0, maxFrames)) * VirtualClock.cyclesPerFrame
@@ -196,6 +250,7 @@ public final class NativeEngine: GameEngine {
     /// about 65 virtual seconds), then delivers one frame with everything written to the SID
     /// meanwhile.
     public func skipDiskLoading() {
+        precondition(execution == .thread, "an inline engine runs through runInline")
         runToKeyWait(maxFrames: 9000, deliverFrames: false)
         deliverFrame(at: machine.clock.cycles, frameEnd: false)
     }
@@ -213,12 +268,17 @@ public final class NativeEngine: GameEngine {
     // MARK: Host side of the handshake
 
     private func resume(deliverFrames: Bool = true) -> NativeEngineGate.Stop {
-        core.deliverFrames = deliverFrames && onFrame != nil
-        core.parkAtIterations = (onIteration != nil || stopAtMainLoopTop) && !replaying
+        prepareResume(deliverFrames: deliverFrames)
         return core.gate.resume()
     }
 
-    private func handle(_ stop: NativeEngineGate.Stop) {
+    /// The flags the program reads when it goes on (set before every resume).
+    func prepareResume(deliverFrames: Bool = true) {
+        core.deliverFrames = deliverFrames && onFrame != nil
+        core.parkAtIterations = (onIteration != nil || stopAtMainLoopTop) && !replaying
+    }
+
+    func handle(_ stop: NativeEngineGate.Stop) {
         switch stop {
         case .target, .keyWait, .finished:
             break
@@ -233,7 +293,7 @@ public final class NativeEngine: GameEngine {
         }
     }
 
-    private func deliverFrame(at cycle: UInt64, frameEnd: Bool = true) {
+    func deliverFrame(at cycle: UInt64, frameEnd: Bool = true) {
         guard let onFrame else { return }
         framesDelivered += 1
         onFrame(makeFrame(at: cycle, frameEnd: frameEnd))

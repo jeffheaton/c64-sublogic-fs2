@@ -1,4 +1,4 @@
-import CryptoKit
+import C64Kit
 
 /// Builds the memory image as SubLogic's boot leaves it, just before the init chain at $A970,
 /// with every byte a crack added replaced by what belongs there.
@@ -81,8 +81,7 @@ public enum ColdImage {
         let slots = patch.detect.map { $0.map(read) }
         switch patch.rule {
         case .hash(let hash):
-            let digest = SHA256.hash(data: slots.flatMap { $0 })
-            return digest.prefix(8).map { String(format: "%02x", $0) }.joined() == hash
+            return hexString(SHA2.sha256(slots.flatMap { $0 }).prefix(8)) == hash
         case .sameLetters:
             guard let first = slots.first, !first.isEmpty, first.allSatisfy(isLetter) else { return false }
             return slots.allSatisfy { $0 == first }

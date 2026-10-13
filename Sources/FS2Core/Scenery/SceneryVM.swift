@@ -1,3 +1,5 @@
+import C64Kit
+
 /// The scenery display-list interpreter ($8730-$8FE7): the bytecode that draws the world, finds
 /// radio stations and streams scenery blocks. See `re/docs/scenery-3d.md` for the opcode
 /// reference.
@@ -220,8 +222,7 @@ extension Machine {
             charge(8)
             throw .invalidOpcode(opcode, at: UInt16(pc))
         default:
-            preconditionFailure(String(format: "display-list handler $%04X (opcode $%02X) is not a known entry",
-                                       handler, opcode))
+            preconditionFailure("display-list handler $\(hex(handler, width: 4)) (opcode $\(hex(opcode))) is not a known entry")
         }
     }
 
@@ -410,8 +411,7 @@ extension Machine {
             // data never gets here; shipping code has no way to run unported 6502 code. `fatalError`
             // (not `preconditionFailure`, whose message an optimized build drops) names the address
             // in every build.
-            fatalError(String(format: "op 0A: native call to $%04X (target $%04X), which has no port",
-                              entry, target))
+            fatalError("op 0A: native call to $\(hex(entry, width: 4)) (target $\(hex(target, width: 4))), which has no port")
         }
     }
 

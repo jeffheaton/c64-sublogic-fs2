@@ -1,3 +1,5 @@
+import C64Kit
+
 /// The command dispatcher ($27D8) and the wait-for-key loop ($2250).
 extension Machine {
     // MARK: dispatchKey ($27D8)
@@ -84,7 +86,7 @@ extension Machine {
         case H.keyZeroAttitude: keyZeroAttitude()
         default:
             // The table is never written at run time; any other target means corrupt memory.
-            assertionFailure(String(format: "key dispatch table entry $%04X is not a handler", address))
+            assertionFailure("key dispatch table entry $\(hex(address, width: 4)) is not a handler")
         }
     }
 

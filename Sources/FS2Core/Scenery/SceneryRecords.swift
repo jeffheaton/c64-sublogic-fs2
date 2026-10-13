@@ -1,3 +1,5 @@
+import C64Kit
+
 /// Display-list data ops: word copies and stores (1A, 25), the radio station records found while
 /// drawing (1D NAV/LOC, 1E ATIS, 05 NDB) and the block load (0D).
 extension Machine {
@@ -140,8 +142,8 @@ extension Machine {
         let target = u16(0x802E)
         precondition(mem[0x802D] == 0x4C && target != 0x802D, "the ATIS hook $802D is not patched")
         guard target == 0xF16A else {
-            fatalError(String(format: "the ATIS hook $802D jumps to $%04X, which has no port "
-                                  + "(only the composer $F16A has one)", target))
+            fatalError("the ATIS hook $802D jumps to $\(hex(target, width: 4)), which has no port "
+                           + "(only the composer $F16A has one)")
         }
         charge(3)
         composeAtis()

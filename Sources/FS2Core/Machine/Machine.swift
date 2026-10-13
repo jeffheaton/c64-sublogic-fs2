@@ -281,7 +281,7 @@ public final class Machine {
     @discardableResult
     public func callOriginal(_ address: UInt16, _ regs: CPURegisters = CPURegisters()) -> CPURegisters {
         guard let bridge = originalBridge else {
-            fatalError(String(format: "routine $%04X is not ported yet", address))
+            fatalError("routine $\(hex(address, width: 4)) is not ported yet")
         }
         return bridge(self, address, regs)
     }

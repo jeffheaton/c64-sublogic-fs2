@@ -1,3 +1,4 @@
+#if !os(WASI)
 import FS2Data
 import Foundation
 
@@ -74,3 +75,4 @@ public struct ModeLibraryFile: Sendable {
                               formatAndSave: { bytes in (try? file.save(bytes)) != nil })
     }
 }
+#endif

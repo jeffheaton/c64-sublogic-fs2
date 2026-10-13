@@ -6,6 +6,7 @@
 #   make audit      the byte and modified-copy audits on the repository and the built app (needs the .d64)
 #   make lab        the dev-only lab CLI: .build/release/fs2lab
 #   make clean      remove build/ and SwiftPM's build products
+#   make web-core   build the core modules for WebAssembly (the portability guard)
 #
 # In sandboxed shells, SwiftPM has to run outside the sandbox.
 #
@@ -32,7 +33,14 @@ AUDIT_TIMEOUT ?= 900
 APP_BUILD := $(CAPPED) $(BUILD_TIMEOUT) $(SWIFT) build -c release --product FS2 --disable-default-traits \
 	--scratch-path .build-app
 
-.PHONY: all app check-app test audit lab clean icon
+# The WebAssembly build uses swift.org's toolchain through swiftly (Xcode's cannot use the wasm
+# Swift SDK), pinned with the SDK in web/toolchain.env. It has its own build directory.
+include web/toolchain.env
+SWIFTLY  ?= $(shell command -v swiftly 2>/dev/null || echo $(HOME)/.swiftly/bin/swiftly)
+WASM_BUILD := $(CAPPED) $(BUILD_TIMEOUT) $(SWIFTLY) run swift build +$(WASM_SWIFT_VERSION) \
+	--swift-sdk $(WASM_SDK) -c release --disable-default-traits --scratch-path .build-web
+
+.PHONY: all app check-app test audit lab clean icon web-core
 
 all: app
 
@@ -90,6 +98,11 @@ audit: app
 lab:
 	$(CAPPED) $(BUILD_TIMEOUT) $(SWIFT) build -c release --product fs2lab
 
+# The three core modules compile for wasm32-wasip1 (no Apple-only API, no threads in shipping
+# paths). Cheap enough to run after any change to C64Kit, FS2Data or FS2Core.
+web-core:
+	$(WASM_BUILD) --target FS2Core
+
 clean:
-	rm -rf build .build-app
+	rm -rf build .build-app .build-web
 	$(CAPPED) $(BUILD_TIMEOUT) $(SWIFT) package clean

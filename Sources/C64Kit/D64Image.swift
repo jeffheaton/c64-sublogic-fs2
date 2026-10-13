@@ -1,4 +1,6 @@
+#if !os(WASI)
 import Foundation
+#endif
 
 /// A Commodore 1541 disk image (.d64): 35 or 40 tracks of 256-byte sectors, optionally followed by error bytes.
 public struct D64Image: Sendable {
@@ -31,9 +33,11 @@ public struct D64Image: Sendable {
         bytes = data
     }
 
+    #if !os(WASI)
     public init(contentsOf url: URL) throws {
         try self.init(data: [UInt8](try Data(contentsOf: url)))
     }
+    #endif
 
     public static func sectorCount(track: Int) -> Int { sectorsPerTrack[track - 1] }
 

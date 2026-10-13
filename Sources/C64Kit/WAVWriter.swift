@@ -1,3 +1,4 @@
+#if !os(WASI)
 import Foundation
 
 /// Writes 16-bit mono PCM WAV files.
@@ -30,3 +31,4 @@ public enum WAVWriter {
         try data(samples: samples, sampleRate: sampleRate).write(to: url)
     }
 }
+#endif

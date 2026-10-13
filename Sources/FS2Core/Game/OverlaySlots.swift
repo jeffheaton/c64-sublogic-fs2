@@ -1,3 +1,5 @@
+import C64Kit
+
 /// The overlay slots $A7E2/$A7E8/$A7EE/$A7F4/$A7FA, executed from the overlay bytes in memory.
 ///
 /// Every overlay starts with five 6-byte slots. The owning overlay's slot jumps to its entry (the
@@ -35,11 +37,11 @@ extension Machine {
                 case Int(DatabaseInfo.entry):
                     databaseInfoScreen()
                 default:
-                    preconditionFailure(String(format: "overlay slot $%04X: JMP $%04X is no overlay entry", slot, target))
+                    preconditionFailure("overlay slot $\(hex(slot, width: 4)): JMP $\(hex(target, width: 4)) is no overlay entry")
                 }
                 return .returned
             default:
-                preconditionFailure(String(format: "overlay slot $%04X: opcode $%02X at $%04X", slot, op, pc))
+                preconditionFailure("overlay slot $\(hex(slot, width: 4)): opcode $\(hex(op)) at $\(hex(pc, width: 4))")
             }
         }
     }
@@ -56,7 +58,7 @@ extension Machine {
         case 0x201E, 0xE5E4: overlay = .flight
         case 0x2021, 0xE5ED: overlay = .databaseInfo
         default:
-            preconditionFailure(String(format: "overlay slot JSR $%04X is no overlay trampoline", target))
+            preconditionFailure("overlay slot JSR $\(hex(target, width: 4)) is no overlay trampoline")
         }
         if target < 0xE000 { charge(3) }                    // the vector's jump
         loadOverlay(overlay)

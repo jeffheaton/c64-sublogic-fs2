@@ -1,3 +1,5 @@
+import C64Kit
+
 /// The interrupt equivalents: the raster IRQ $2285 (the screen split and the frame tick), the
 /// alternate IRQ $2304 (the frame tick only), the dispatch through the vectors at $FFFE/$FFFA, and
 /// the RESTORE NMI's cold restart.
@@ -21,7 +23,7 @@ extension Machine {
         case 0x2304: altIrq()
         case 0x790A, 0xE58E: charge(6)               // a bare return (the loader's disabled vector)
         case let vector:
-            preconditionFailure(String(format: "IRQ vector $%04X is no handler of the game", vector))
+            preconditionFailure("IRQ vector $\(hex(vector, width: 4)) is no handler of the game")
         }
         interruptDisable = flag
     }
@@ -48,7 +50,7 @@ extension Machine {
         case 0x790A, 0xE58E:
             charge(6)
         case let vector:
-            preconditionFailure(String(format: "NMI vector $%04X is no handler of the game", vector))
+            preconditionFailure("NMI vector $\(hex(vector, width: 4)) is no handler of the game")
         }
         interruptDisable = flag
         if !flag && eventHandler != nil { nextEventCycle = min(nextEventCycle, clock.cycles) }

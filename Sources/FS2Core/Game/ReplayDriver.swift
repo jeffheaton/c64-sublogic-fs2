@@ -48,10 +48,10 @@ public final class ReplayDriver {
         /// the reads agree (or the log has no read counts).
         public var reads: ReadCount?
         public var description: String {
-            var s = String(format: "checkpoint %d: poll %d (recorded %d), memory hash %016llX (recorded %016llX)",
-                           checkpoint, poll, expectedPoll, hash, expectedHash)
+            var s = "checkpoint \(checkpoint): poll \(poll) (recorded \(expectedPoll)), "
+                + "memory hash \(hex(hash, width: 16)) (recorded \(hex(expectedHash, width: 16)))"
             if let r = reads {
-                s += String(format: ", $%04X read %d times (recorded %d)", r.address, r.port, r.recorded)
+                s += ", $\(hex(r.address, width: 4)) read \(r.port) times (recorded \(r.recorded))"
             }
             return s
         }
@@ -115,7 +115,9 @@ public final class ReplayDriver {
         return k
     }
 
-    /// Runs the replay to its last checkpoint (or the first mismatch) and reports.
+    #if !os(WASI)
+    /// Runs the replay to its last checkpoint (or the first mismatch) and reports (on a
+    /// `ProgramThread`; not on WASI).
     public func run(from start: Start) -> Outcome {
         let m = machine
         m.eventHandler = nil
@@ -143,6 +145,7 @@ public final class ReplayDriver {
                        polls: polls, deliveries: nextDelivery, irqs: irqs, nmis: nmis, unloggedReads: unlogged,
                        unreadValues: unread)
     }
+    #endif
 
     private func poll(_ m: Machine) {
         polls += 1
